@@ -1,0 +1,178 @@
+#include <limits.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ncurses.h>
+
+#define LINEMAX 128
+
+#define ctrl(x) ((x)&0x1f)
+
+typedef struct
+{
+    char * buffer;
+    int length;
+} line_t;
+
+
+
+char filepath[PATH_MAX]; // the name of the currently open file
+
+int maxy, maxx;     // the maximum x and y position
+int cx, cy;         // cursor
+int xoffs, yoffs;   // scroll offset
+
+int numlines;
+line_t * textbuffer;
+
+
+
+void Quit (void)
+{
+    endwin();
+    exit(0);
+}
+
+void Error (const char * message)
+{
+    endwin();
+    perror(message);
+    exit(1);
+}
+
+void LOG (const char * msg)
+{
+    mvprintw(0, 0, "%s\n", msg);
+    printw("press any key...\n");
+    refresh();
+    getch();
+}
+
+void Open (const char * path)
+{
+    FILE *      stream;
+    char *      buf;
+    ssize_t     len;
+    size_t      cap;
+    line_t *    line;
+    
+    strncpy(filepath, path, PATH_MAX);
+    
+    stream = fopen(filepath, "r");
+    if (!stream) {
+        Error("Open: could not open file");
+    }
+    
+    if (textbuffer) {
+        free(textbuffer);
+        textbuffer = NULL;
+    }
+    
+    // load textbuffer
+    numlines = 0;
+    cap = 0;
+    buf = NULL;
+    while ( (len = getline(&buf, &cap, stream)) != -1 )
+    {
+#if 0
+        while (len > 0 && (buf[len-1] == '\n' || buf[len-1] == '\r')) {
+            len--; // strip \n or \r chars
+        }
+#endif
+        // increase buffer size by 1
+        textbuffer = realloc(textbuffer, sizeof(line_t) * (numlines + 1));
+        line = &textbuffer[numlines];
+        line->length = (int)len;
+        line->buffer = malloc(len + 1);
+        memcpy(line->buffer, buf, len);
+        line->buffer[len] = '\0';
+        numlines++;
+    }
+    
+    free(buf);
+    fclose(stream);
+}
+
+void Close (void)
+{
+    
+}
+
+void Display (void)
+{
+    int i;
+    
+    clear();
+    move(0, 0);
+    for (i = yoffs; i < yoffs+maxy; i++)
+    {
+        printw("%s", textbuffer[i+yoffs].buffer);
+    }
+    refresh();
+}
+
+
+int main (int argc, const char * argv[])
+{
+    int c;
+//    char filename[80];
+    
+    initscr();
+    raw();
+    noecho();
+    keypad(stdscr, TRUE);
+//    halfdelay(1);
+//    nodelay(stdscr, TRUE);
+
+    // init editor
+    getmaxyx(stdscr, maxy, maxx);
+    numlines = 0;
+
+    if (argc > 1) {
+        Open(argv[1]);
+    }
+    
+    while (1)
+    {
+        Display();
+        
+        move(cy, cx); // update cursor
+        
+        c = getch();
+        switch (c)
+        {
+            case ctrl('q'):
+                Quit();
+                break;
+                
+            case KEY_UP:
+                if (cy)
+                    cy--;
+                break;
+            case KEY_DOWN:
+                if (cy + 1 > maxy) {
+                    yoffs++;
+                } else {
+                    cy++;
+                }
+                break;
+            case KEY_LEFT:
+                if (cx) {
+                    cx--;
+                }
+                break;
+            case KEY_RIGHT:
+                cx++;
+                break;
+                
+            case KEY_RESIZE:
+                getmaxyx(stdscr, maxy, maxx);
+                maxy--;
+                maxx--;
+                break;
+            default:
+                break;
+        }
+    }
+}
