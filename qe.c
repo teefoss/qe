@@ -19,38 +19,10 @@ enum colorpairs {
 #define NUM_KEYWORDS 32
 const char *keywords[NUM_KEYWORDS] =
 {
-"auto",
-"double",
-"int",
-"struct",
-"break",
-"else",
-"long",
-"switch",
-"case",
-"enum",
-"register",
-"typedef",
-"char",
-"extern",
-"return",
-"union",
-"const",
-"float",
-"short",
-"unsigned",
-"continue",
-"for",
-"signed",
-"void",
-"default",
-"goto",
-"sizeof",
-"volatile",
-"do",
-"if",
-"static",
-"while"
+    "auto","double","int","struct","break","else","long","switch","case",
+    "enum","register","typedef","char","extern","return","union","const",
+    "float","short","unsigned","continue","for","signed","void","default",
+    "goto","sizeof","volatile","do","if","static","while"
 };
 
 const char * numchars = { "1234567890xXabcdefABCDEFuUlL+-.eE" };
@@ -171,6 +143,45 @@ void DeleteLine (int index)
     numlines--;
 }
 
+
+#pragma mark - Editing
+
+void InsertChar (int c)
+{
+    line_t * line;
+    
+    line = &textbuffer[cy+yoffs];
+    
+    // make room if needed
+    if (line->length + 1 > LINELEN) {
+        line->size += LINELEN;
+        line->buffer = realloc(line->buffer, line->size);
+    }
+    
+    if (cx == line->length) { // just append
+        line->buffer[cx] = c;
+    } else { // insert
+        memmove(&line->buffer[cx+1], &line->buffer[cx], line->length-cx);
+        line->buffer[cx] = c;
+    }
+    line->length++;
+    cx++;
+}
+
+void DeleteChar ()
+{
+    if (cx == 0 && cy+yoffs > 0)
+    {
+        
+    }
+}
+
+
+
+
+
+#pragma mark - File I/O
+
 void Open (const char * path)
 {
     FILE *      stream;
@@ -208,40 +219,14 @@ void Open (const char * path)
     fclose(stream);
 }
 
-void Close (void)
+void Save (void)
 {
     
 }
 
-void HL_Number (int * x, int y)
-{
-    char * c;
-    line_t * l;
 
-    attron(COLOR_PAIR(CP_NUMBER));
-    
-    l = &textbuffer[y+yoffs];
-    do
-    {
-        c = &l->buffer[*x];
-        if (!strchr(numchars, *c)) {
-            break;
-        }
-        mvaddch(y, *x, *c);
-        if (++(*x) == l->length) {
-            attroff(COLOR_PAIR(CP_NUMBER));
-            return;
-        }
-    } while (1);
-    attroff(COLOR_PAIR(CP_NUMBER));
-    mvaddch(y, *x, *c);
-}
 
-void HL_AltNumber ()
-{
-    
-}
-
+#pragma mark - Display
 
 void Display (void)
 {
@@ -345,35 +330,15 @@ void MoveCursorHoriz (int step)
 }
 
 
-void InsertChar (int c)
-{
-    line_t * line;
 
-    line = &textbuffer[cy+yoffs];
-    
-    // make room if needed
-    if (line->length + 1 > LINELEN) {
-        line->size += LINELEN;
-        line->buffer = realloc(line->buffer, line->size);
-    }
-    
-    if (cx == line->length) { // just append
-        line->buffer[cx] = c;
-    } else { // insert
-        memmove(&line->buffer[cx+1], &line->buffer[cx], line->length-cx);
-        line->buffer[cx] = c;
-    }
-    line->length++;
-    cx++;
+void UpdateWindowInfo (void)
+{
+    getmaxyx(stdscr, maxy, maxx);
+    maxy--;
+    maxx--;
 }
 
-void DeleteChar ()
-{
-    if (cx == 0 && cy+yoffs > 0)
-    {
-        
-    }
-}
+
 
 
 int main (int argc, const char * argv[])
@@ -384,6 +349,7 @@ int main (int argc, const char * argv[])
     raw();
     noecho();
     keypad(stdscr, TRUE);
+    
     if (!has_colors())
         Error("Your terminal does not support color! Please join us in the 21st Century.");
     start_color();
@@ -393,9 +359,7 @@ int main (int argc, const char * argv[])
     init_pair(CP_TEXT, COLOR_WHITE, COLOR_BLACK);
 
     // init editor
-    getmaxyx(stdscr, maxy, maxx);
-    maxy--;
-    maxx--;
+    UpdateWindowInfo();
     numlines = 0;
 
     if (argc > 1) {
@@ -415,34 +379,28 @@ int main (int argc, const char * argv[])
                 Quit();
                 break;
                 
-            case ctrl(KEY_BACKSPACE):
+            case ctrl('d'):
                 DeleteLine(cy+yoffs);
                 break;
                 
             case KEY_UP:
                 MoveCursorVert(-1);
                 break;
-                
             case KEY_DOWN:
                 MoveCursorVert(1);
                 break;
-                
             case KEY_LEFT:
                 MoveCursorHoriz(-1);
                 break;
-                
             case KEY_RIGHT:
                 MoveCursorHoriz(1);
                 break;
-                
             case KEY_RESIZE:
-                getmaxyx(stdscr, maxy, maxx);
-                maxy--;
-                maxx--;
+                UpdateWindowInfo();
                 break;
                 
             case 10:
-            case KEY_ENTER:
+            case KEY_ENTER: // ?
                 if (cx == textbuffer[cy+yoffs].length)
                     InsertLine(cy+yoffs+1, NULL, 0);
                 else {
