@@ -170,9 +170,29 @@ void InsertChar (int c)
 
 void DeleteChar ()
 {
+    line_t * this;
+    line_t * prev;
+    int oldlen;
+    
+    this = &textbuffer[cy+yoffs];
     if (cx == 0 && cy+yoffs > 0)
     {
-        
+        prev = &textbuffer[cy + yoffs - 1];
+        oldlen = prev->length;
+        prev->length += this->length;
+        prev->size = prev->length;
+        prev->buffer = realloc(prev->buffer, prev->size+LINELEN);
+        strncat(prev->buffer, this->buffer, this->length);
+        DeleteLine(cy+yoffs);
+        cy--;
+        cx = oldlen;
+    } else if (cx > 0 && cx < this->length) {
+        memmove(&this->buffer[cx-1], &this->buffer[cx], this->length-cx);
+        this->length--;
+        cx--;
+    } else if (cx == this->length) {
+        this->length--;
+        cx--;
     }
 }
 
@@ -410,6 +430,8 @@ int main (int argc, const char * argv[])
                     line->length = x;
                 }
                 break;
+                
+            case 127:
             case KEY_BACKSPACE:
                 DeleteChar();
                 break;
@@ -419,6 +441,15 @@ int main (int argc, const char * argv[])
                 if (c >= 32 && c < 127) {
                     InsertChar(c);
                 }
+#if 0
+                else {
+                    clear();
+                    mvaddch(0, 0, c);
+                    refresh();
+                    getch();
+                    Quit();
+                }
+#endif
                 break;
         }
     }
