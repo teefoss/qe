@@ -163,7 +163,7 @@ void DrawString(int x, int y, Color color, const char * string)
     if ( text ) {
         Blit(text, x, y);
     } else {
-        // TODO: error
+        DieGracefully();
     }
 }
 

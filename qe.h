@@ -24,7 +24,7 @@
 #endif
 
 #ifdef __APPLE__
-#   define CMD_KEY (KMOD_GUI | KMOD_CTRL) // TODO: test
+#   define CMD_KEY (KMOD_GUI | KMOD_CTRL)
 #else
 #   define CMD_KEY KMOD_CTRL
 #endif
