@@ -17,7 +17,6 @@ Line * NewLine(void)
     return line;
 }
 
-// TODO: handle \n
 void InsertChars(Line * line, char * string, size_t len, int x)
 {
     if ( len == 0 ) {
@@ -31,7 +30,7 @@ void InsertChars(Line * line, char * string, size_t len, int x)
     // Reallocate.
     char * temp = realloc(line->chars, line->len + 1);
     if ( temp == NULL ) {
-        // TODO: handle error
+        DieGracefully();
     }
     line->chars = temp;
     line->chars[line->len] = '\0';

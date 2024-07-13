@@ -47,22 +47,24 @@ int  _tab_size = 4;          // tab size in spaces
 int  _font_size = 12;
 int  _line_spacing = 1;      // number of pixels between lines
 int  _col_limit = 80;        // column limit guide, 0 == not visible
-int  _win_w = 640;
-int  _win_h = 480;
+int  _win_w = 0;
+int  _win_h = 0;
 Color _fg_color = 0;
 Color _bg_color = 1;
 Color _line_number_color = 0;
 
 Option options[] = {
-    { "TAB_SIZE",           INTEGER,    &_tab_size },
     { "USE_SPACES",         BOOLEAN,    &_use_spaces },
-    { "FONT",               STRING,     _font_path },
-    { "FONT_SIZE",          INTEGER,    &_font_size },
     { "CASE_SENSITIVE",     BOOLEAN,    &_case_sensitive },
-    { "LINE_SPACING",       INTEGER,    &_line_spacing },
     { "LINE_NUMBERS",       BOOLEAN,    &_line_numbers },
     { "LINE_HIGHLIGHT",     BOOLEAN,    &_highlight_line },
+    { "FONT",               STRING,     _font_path },
+    { "TAB_SIZE",           INTEGER,    &_tab_size },
+    { "FONT_SIZE",          INTEGER,    &_font_size },
+    { "LINE_SPACING",       INTEGER,    &_line_spacing },
     { "COLUMN_LIMIT",       INTEGER,    &_col_limit },
+    { "WINDOW_WIDTH",       INTEGER,    &_win_w },
+    { "WINDOW_HEIGHT",      INTEGER,    &_win_h },
     { "FOREGROUND_COLOR",   COLOR,      &_fg_color },
     { "BACKGROUND_COLOR",   COLOR,      &_bg_color },
     { "LINE_NUMBER_COLOR",  COLOR,      &_line_number_color },

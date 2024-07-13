@@ -16,15 +16,16 @@
 #include <errno.h>
 #include <sys/stat.h> // linux/mac: mkdir
 
-// TODO: features
-// jump back to prev char
-// hold backspace + ...
-//  ... w delete word
-//  ... c delete char
-//  ... l delete line
-//  - or -
-// ctrl-d to enter delete mode, then w for word, etc.
 /*
+ Features
+ jump back to prev char
+ hold backspace + ...
+ ... w delete word
+ ... c delete char
+ ... l delete line
+ - or -
+ ctrl-d to enter delete mode, then w for word, etc.
+
  pgup - jump to top of visible lines
  C-left word left
  C-A-left beginning line
@@ -118,7 +119,6 @@ static void Redraw(void)
                    _line_number_color,
                    "%*d", line_num_cols, top_line_num + row + 1);
 
-        // TODO: if beyond col limit, draw char with gray background.
         DrawString(text_x, y, _fg_color, line->chars);
 
         if ( line_num == cy ) {
@@ -373,8 +373,6 @@ int main(int argc, const char * argv[argc])
 {
     LoadConfig(argv[1]);
     InitWindow();
-
-    // TODO: monospace font hint
 
     SDL_AddEventWatch(EventWatch, NULL);
     keys = SDL_GetKeyboardState(NULL);

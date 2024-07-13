@@ -23,7 +23,7 @@ int _char_h;
 static SDL_Window * window;
 static SDL_Surface * draw_surface;
 
-static TTF_Font * font; // TODO: pixel font fallback
+static TTF_Font * font;
 static int draw_scale;
 static int num_font_sizes;
 static int font_index; // index into `font_size`, current font size.
@@ -80,6 +80,21 @@ void ChangeFontSize(int incrememnt)
     printf("- char h: %d\n", _char_h);
 }
 
+// TODO: have a key command for this?
+void SetWindowWidthToFit(void)
+{
+    if ( _col_limit == 0 ) {
+        return;
+    }
+
+    int line_nums_w = (LineNumCols() + 2) * _char_w;
+    int main_area_w = _col_limit * _char_w;
+    int w = _margin + line_nums_w + main_area_w;
+    int h;
+    SDL_GetWindowSize(window, NULL, &h);
+    SDL_SetWindowSize(window, w, h);
+}
+
 void InitWindow(void)
 {
     num_font_sizes = sizeof(font_sizes) / sizeof(font_sizes[0]);
@@ -89,14 +104,16 @@ void InitWindow(void)
         exit(EXIT_FAILURE);
     }
 
-    // TODO: start window with correct width for user `cols`
+    int win_w = _win_w == 0 ? 640 : _win_w;
+    int win_h = _win_h == 0 ? 480 : _win_h;
+
     u32 window_flags = 0;
     window_flags |= SDL_WINDOW_RESIZABLE;
     window_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
-    window = SDL_CreateWindow("", 128, 128, _win_w, _win_h, window_flags);
+    window = SDL_CreateWindow("", 128, 128, win_w, win_h, window_flags);
     draw_surface = SDL_GetWindowSurface(window);
 
-    draw_scale = draw_surface->h / _win_h;
+    draw_scale = draw_surface->h / win_h;
     printf("render scale: %d\n", draw_scale);
     _margin = 8 * draw_scale;
 
@@ -104,6 +121,8 @@ void InitWindow(void)
         fprintf(stderr, "TTF_Init failed: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
+
+    TTF_SetFontHinting(font, TTF_HINTING_MONO);
 
     font_index = GetFontIndex(_font_size);
     if ( font_sizes[font_index] != _font_size ) {
@@ -117,6 +136,10 @@ void InitWindow(void)
     }
 
     ChangeFontSize(0);
+
+    if ( _win_w == 0 ) {
+        SetWindowWidthToFit();
+    }
 }
 
 static void Blit(SDL_Surface * surface, int x, int y)

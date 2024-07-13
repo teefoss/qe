@@ -42,10 +42,6 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 
-#define STRSZ 79
-typedef unsigned char String[STRSZ + 1];
-typedef String StringArray[STR_ARR_MAX];
-
 typedef enum { UP, DOWN, LEFT, RIGHT } Direction;
 
 int CaseCompare(const char * a, const char * b);
