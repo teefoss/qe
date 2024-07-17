@@ -156,6 +156,10 @@ void FillRect(SDL_Rect rect, SDL_Color color)
 
 void DrawString(int x, int y, Color color, const char * string)
 {
+    if ( string == NULL || *string == '\0' ) {
+        return;
+    }
+    
     SDL_Color sdl_fg = ColorToSDL(color);
     //    SDL_Color sdl_bg = GetColor(_bg_color);
     SDL_Surface * text = TTF_RenderText_Blended(font, string, sdl_fg);
@@ -163,7 +167,10 @@ void DrawString(int x, int y, Color color, const char * string)
     if ( text ) {
         Blit(text, x, y);
     } else {
-        DieGracefully();
+#ifdef QE_DEBUG
+        fprintf(stderr, "Could not create text surface: %s\n", SDL_GetError());
+#endif
+        DieGracefully("Error: failed to blit text");
     }
 }
 
@@ -183,7 +190,7 @@ void DrawFormat(int x, int y, Color color, const char * format, ...)
     if ( allocated < size_needed ) {
         char * temp = realloc(buffer, size_needed);
         if ( temp == NULL ) {
-            DieGracefully();
+            DieGracefully("Error: out of memory");
         }
         buffer = temp;
         allocated = size_needed;

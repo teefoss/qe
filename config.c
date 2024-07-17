@@ -45,13 +45,13 @@ char _font_path[PATH_MAX] = DEFAULT_FONT;
 char _theme[PATH_MAX] = "default";
 int  _tab_size = 4;          // tab size in spaces
 int  _font_size = 12;
-int  _line_spacing = 1;      // number of pixels between lines
+int  _line_spacing = 0;      // number of pixels between lines
 int  _col_limit = 80;        // column limit guide, 0 == not visible
 int  _win_w = 0;
 int  _win_h = 0;
-Color _fg_color = 0;
-Color _bg_color = 1;
-Color _line_number_color = 0;
+Color _fg_color = BLACK;
+Color _bg_color = WHITE;
+Color _line_number_color = GRAY;
 
 Option options[] = {
     { "USE_SPACES",         BOOLEAN,    &_use_spaces },

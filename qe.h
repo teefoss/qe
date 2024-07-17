@@ -35,8 +35,10 @@
 
 #define ARR_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 #define STREQ(a, b) (strcmp(a, b) == 0)
-#define MAX(a, b) ((a > b) ? (a) : (b))
-#define MIN(a, b) ((a < b) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define CLAMP(val, min, max) (val < min ? min : val > max : max : val)
+#define EXTRACT_FIELD(value, mask)  (((value) & (mask)) >> __builtin_ctz(mask))
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -45,7 +47,7 @@ typedef uint32_t u32;
 typedef enum { UP, DOWN, LEFT, RIGHT } Direction;
 
 int CaseCompare(const char * a, const char * b);
-void DieGracefully(void);
+void DieGracefully(const char * message);
 void Scroll(size_t new_line_num);
 
 #endif /* qe_h */

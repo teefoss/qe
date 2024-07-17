@@ -20,13 +20,30 @@ size_t LineCount(void)
     return num_lines;
 }
 
+void InsertLineBefore(Line * line, Line * next)
+{
+    ASSERT(line != NULL);
+
+    line->next = next;
+    line->prev = next->prev;
+
+    // Update surrounding nodes.
+    if ( next->prev ) {
+        next->prev->next = line;
+    } else {
+        head = line;
+    }
+    next->prev = line;
+
+    num_lines++;
+}
+
 /** Insert line into buffer after line `prev`. */
-void InsertLine(Line * line, Line * prev)
+void InsertLineAfter(Line * line, Line * prev)
 {
     ASSERT(line != NULL);
 
     // Link up new node.
-
     line->next = prev->next;
     line->prev = prev;
 

@@ -39,6 +39,7 @@ static const u8 * keys;
 static SDL_Keymod mods;
 
 static const char * edit_path;
+static float top_line_num_f;
 static int top_line_num;
 static int cx;
 static int cy;
@@ -56,16 +57,15 @@ int CaseCompare(const char * a, const char * b)
     return tolower(*a) - tolower(*b);
 }
 
-void DieGracefully(void)
+void DieGracefully(const char * message)
 {
+    fprintf(stderr, "%s\n", message);
     // TODO: the gracefully part
     exit(EXIT_FAILURE);
 }
 
 static void Redraw(void)
 {
-    Line * top_line = GetLine(top_line_num);
-
     int line_num_cols = LineNumCols();
     int text_x = (line_num_cols + 1) * _char_w + _margin;
 
@@ -106,25 +106,32 @@ static void Redraw(void)
     FillRect(separator, separator_color);
 
     int row = 0;
-    int y = tray_bot + _margin;
+    int y = tray_bot;
     Line * line;
     int line_num = top_line_num;
+    float partial_line_y = top_line_num_f - floorf(top_line_num_f);
 
-    for ( line = top_line;
+    for ( line = GetLine((int)top_line_num_f);
           line != NULL && y < window_h;
           line = line->next, row++, y += _char_h + _line_spacing, line_num++ )
     {
-        DrawFormat(_margin,
-                   y,
-                   _line_number_color,
-                   "%*d", line_num_cols, top_line_num + row + 1);
+        int draw_y = (float)y - partial_line_y * (float)_char_h;
+        int line_num2 = line_num;
+        if ( partial_line_y > 0.0f ) {
+            line_num2--;
+        }
 
-        DrawString(text_x, y, _fg_color, line->chars);
+        DrawFormat(_margin,
+                   draw_y,
+                   _line_number_color,
+                   "%*d", line_num_cols, line_num2 + 1);
+
+        DrawString(text_x, draw_y, _fg_color, line->chars);
 
         if ( line_num == cy ) {
             SDL_Rect cursor_rect = {
                 .x = text_x + cx * _char_w,
-                .y = y,
+                .y = draw_y,
                 .w = _char_w,
                 .h = _char_h
             };
@@ -132,7 +139,7 @@ static void Redraw(void)
             if ( cursor_blink && !TrayIsOpen() ) {
                 FillRect(cursor_rect, ColorToSDL(_fg_color));
                 char cursor_ch[2] = { line->chars[cx], '\0' };
-                DrawString(cursor_rect.x,  cursor_rect.y, _bg_color, cursor_ch);
+                DrawString(cursor_rect.x, cursor_rect.y, _bg_color, cursor_ch);
             }
         }
     }
@@ -146,12 +153,19 @@ static void Redraw(void)
 
 void Scroll(size_t new_line_num)
 {
+    if ( new_line_num < 0 ) {
+        new_line_num = 0;
+    } else if ( new_line_num >= LineCount() ) {
+        new_line_num = LineCount() - 1;
+    }
+
     cy = (int)new_line_num;
-    top_line_num = cy - WindowHeight() / _char_h / 2;
+    top_line_num = cy - WindowHeight() / _char_h / 2; // TODO: editor region
+
     if ( top_line_num < 0 ) {
         top_line_num = 0;
     }
-    Redraw();
+//    Redraw();
 }
 
 int EventWatch(void * user_data, SDL_Event * event)
@@ -238,12 +252,14 @@ static void InsertNewLine(void)
     Line * current = GetLine(cy);
     Line * newline = NewLine();
 
-    if ( cx == 0 ) {
-        InsertLine(newline, current->prev);
+    if ( cy == 0 && cx == 0 ) {
+        InsertLineBefore(newline, current);
+    } else if ( cx == 0 ) {
+        InsertLineAfter(newline, current->prev);
     } else if ( cx == current->len ) {
-        InsertLine(newline, current);
+        InsertLineAfter(newline, current);
     } else { // We are mid-line.
-        InsertLine(newline, current);
+        InsertLineAfter(newline, current);
         char * cursor_string = current->chars + cx;
         InsertChars(newline, cursor_string, strlen(cursor_string), 0);
         RemoveChars(current, current->len - cx, cx);
@@ -308,21 +324,69 @@ static void PasteFromClipboard(void)
     SDL_free(clipboard_text);
 }
 
+void JumpToBeginningOfLine(void)
+{
+    Line * line = GetLine(cy);
+    if ( line->len == 0 ) {
+        return;
+    }
+
+    int x;
+    for ( x = 0; x < line->len; x++ ) {
+        if ( !isspace(line->chars[x]) ) {
+            break;
+        }
+    }
+
+    if ( cx > x ) {
+        cx = x;
+    } else {
+        cx = 0;
+    }
+}
+
 static void DoEditorKey(SDL_Keycode key)
 {
     switch ( key ) {
         case SDLK_UP:
-            MoveCursor(UP);
+            if ( mods & CMD_KEY ) {
+                Scroll(0);
+            } else {
+                MoveCursor(UP);
+            }
             break;
         case SDLK_DOWN:
-            MoveCursor(DOWN);
+            if ( mods & CMD_KEY ) {
+                Scroll(LineCount() - 1);
+            } else {
+                MoveCursor(DOWN);
+            }
             break;
         case SDLK_RIGHT:
-            MoveCursor(RIGHT);
+            if ( mods & CMD_KEY ) {
+                Line * line = GetLine(cy);
+                cx = line->len;
+            } else {
+                MoveCursor(RIGHT);
+            }
             break;
         case SDLK_LEFT:
-            MoveCursor(LEFT);
+            if ( mods & CMD_KEY ) {
+                JumpToBeginningOfLine();
+            } else {
+                MoveCursor(LEFT);
+            }
             break;
+        case SDLK_PAGEUP: {
+            int visible_rows = WindowHeight() / _char_h;
+            Scroll(cy - visible_rows / 2);
+            break;
+        }
+        case SDLK_PAGEDOWN: {
+            int visible_rows = WindowHeight() / _char_h;
+            Scroll(cy + visible_rows / 2);
+            break;
+        }
         case SDLK_RETURN:
             InsertNewLine();
             break;
@@ -457,6 +521,15 @@ int main(int argc, const char * argv[argc])
                 default:
                     break;
             }
+        }
+
+        // Smooth scrolling!
+        float dy = top_line_num_f - (float)top_line_num;
+        if ( fabsf(dy) > 0.1f ) {
+            top_line_num_f -= dy * 0.4f;
+            needs_refresh = true;
+        } else {
+            top_line_num_f = top_line_num;
         }
 
         if ( UpdateTray() ) {

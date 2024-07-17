@@ -30,7 +30,7 @@ void InsertChars(Line * line, char * string, size_t len, int x)
     // Reallocate.
     char * temp = realloc(line->chars, line->len + 1);
     if ( temp == NULL ) {
-        DieGracefully();
+        DieGracefully("Error: could not insert text (out of memory)\n");
     }
     line->chars = temp;
     line->chars[line->len] = '\0';

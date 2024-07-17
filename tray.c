@@ -28,8 +28,7 @@ typedef enum {
 static TrayState state;
 static TrayType type;
 static float bottom;
-static char buffer[TRAY_BUF_SIZE + 1];
-static int len;
+Line buffer;
 static int cx;
 
 float TrayBottom(void)
@@ -54,9 +53,8 @@ void CloseTray(void)
 {
     if ( state != TRAY_CLOSED ) {
         state = TRAY_CLOSING;
-        len = 0;
         cx = 0;
-        memset(buffer, 0, sizeof(buffer));
+        RemoveChars(&buffer, buffer.len, 0);
     }
 }
 
@@ -76,7 +74,7 @@ void DoTrayKey(SDL_Keycode key)
         case SDLK_RETURN:
             if ( type == TRAY_LINE_NUM ) {
                 errno = 0;
-                long line_num = strtol(buffer, NULL, 10);
+                long line_num = strtol(buffer.chars, NULL, 10);
                 if ( line_num == 0 && errno == EINVAL ) {
                     break;
                 }
@@ -97,15 +95,8 @@ void DoTrayKey(SDL_Keycode key)
 
 void DoTrayTextInput(char ch)
 {
-    if ( len < TRAY_BUF_SIZE ) {
-        for ( int x = len; x > cx; x-- ) {
-            buffer[x] = buffer[x - 1];
-        }
-
-        buffer[cx] = ch;
-        len++;
-        cx++;
-    }
+    InsertChars(&buffer, &ch, 1, cx);
+    cx++;
 }
 
 bool UpdateTray(void)
@@ -168,7 +159,7 @@ void DrawTray(bool cursor_blink)
     DrawString(_margin, bottom - y_offset, gray, title);
 
     // buffer
-    DrawString(_margin, bottom - (_margin + _char_h), _fg_color, buffer);
+    DrawString(_margin, bottom - (_margin + _char_h), _fg_color, buffer.chars);
 
     if ( cursor_blink ) {
         SDL_Rect cursor_rect = {
