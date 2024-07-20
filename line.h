@@ -9,10 +9,18 @@
 #define line_h
 
 #include "qe.h"
+#include "color.h"
+
+typedef struct {
+    size_t start;
+    size_t len;
+    Color color;
+} Token;
 
 typedef struct line {
     char * chars; // allocated size is always length + 1
-    u16 len;
+    Color * char_colors;
+    size_t len;
     struct line * prev;
     struct line * next;
 } Line;

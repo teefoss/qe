@@ -95,7 +95,7 @@ void SetWindowWidthToFit(void)
     SDL_SetWindowSize(window, w, h);
 }
 
-void InitWindow(void)
+void InitWindow(const char * window_title)
 {
     num_font_sizes = sizeof(font_sizes) / sizeof(font_sizes[0]);
 
@@ -110,7 +110,7 @@ void InitWindow(void)
     u32 window_flags = 0;
     window_flags |= SDL_WINDOW_RESIZABLE;
     window_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
-    window = SDL_CreateWindow("", 128, 128, win_w, win_h, window_flags);
+    window = SDL_CreateWindow(window_title, 128, 128, win_w, win_h, window_flags);
     draw_surface = SDL_GetWindowSurface(window);
 
     draw_scale = draw_surface->h / win_h;

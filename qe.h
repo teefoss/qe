@@ -25,10 +25,16 @@
     #define ASSERT(x)
 #endif
 
-#ifdef __APPLE__
-#   define CMD_KEY (KMOD_GUI | KMOD_CTRL)
+#ifdef _WIN32
+    #define PATH_SEP '\\'
 #else
-#   define CMD_KEY KMOD_CTRL
+    #define PATH_SEP '/'
+#endif
+
+#ifdef __APPLE__
+    #define CMD_KEY (KMOD_GUI | KMOD_CTRL)
+#else
+    #define CMD_KEY KMOD_CTRL
 #endif
 
 #ifndef PATH_MAX
@@ -48,7 +54,8 @@ typedef uint32_t u32;
 typedef enum { UP, DOWN, LEFT, RIGHT } Direction;
 
 int CaseCompare(const char * a, const char * b);
-void DieGracefully(const char * message);
+void DieGracefully(const char * message, ...);
 void Scroll(size_t new_line_num);
+int Edit(const char * path);
 
 #endif /* qe_h */

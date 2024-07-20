@@ -67,11 +67,6 @@ const char * ColorName(Color color)
     return palette[color].name;
 }
 
-static int ClampComponent(int val)
-{
-    return val < 0 ? 0 : val > 255 ? 255 : val;
-}
-
 static int AdjustComponent(Color color, int component_mask, int amount)
 {
     int component = EXTRACT_FIELD(palette[color].value, component_mask);

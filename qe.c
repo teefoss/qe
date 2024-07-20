@@ -6,6 +6,7 @@
 //
 
 #include "qe.h"
+
 #include "buffer.h"
 #include "config.h"
 #include "tray.h"
@@ -40,7 +41,7 @@
 static const u8 * keys;
 static SDL_Keymod mods;
 
-static const char * edit_path;
+static const char * document_path;
 static float top_line_num_f;
 static int top_line_num;
 static int cx;
@@ -59,10 +60,14 @@ int CaseCompare(const char * a, const char * b)
     return tolower(*a) - tolower(*b);
 }
 
-void DieGracefully(const char * message)
+void DieGracefully(const char * message, ...)
 {
-    fprintf(stderr, "%s\n", message);
     // TODO: the gracefully part
+    
+    va_list args;
+    va_start(args, message);
+    vfprintf(stderr, message, args);
+    fprintf(stderr, "\n");
     exit(EXIT_FAILURE);
 }
 
@@ -75,37 +80,37 @@ static void Redraw(void)
     int window_h = WindowHeight();
     float tray_bot = TrayBottom();
 
+    // Background Color
     SDL_Rect main_area = {
         .x = 0,
         .y = tray_bot,
-        .w = text_x + (_col_limit * _char_w),
+        .w = window_w,
         .h = window_h - tray_bot
     };
-
-    SDL_Rect side_area = {
-        .x = main_area.w,
-        .y = tray_bot,
-        .w = window_w - main_area.w,
-        .h = window_h - tray_bot
-    };
-
-    SDL_Rect separator = {
-        .x = side_area.x,
-        .y = tray_bot,
-        .w = 1,
-        .h = window_h - tray_bot
-    };
-
-    // Background Color
     FillRect(main_area, ColorToSDL(_bg_color));
 
-    // Side Area
-    SDL_Color side_area_color = AdjustTone(_bg_color, 8);
-    FillRect(side_area, side_area_color);
+    if ( _col_limit != 0 ) {
+        int text_w = _col_limit * _char_w;
+        // Side Area
+        SDL_Rect side_area = {
+            .x = text_x + text_w,
+            .y = tray_bot,
+            .w = window_w - text_w,
+            .h = window_h - tray_bot
+        };
+        SDL_Color side_area_color = AdjustTone(_bg_color, 8);
+        FillRect(side_area, side_area_color);
 
-    // Main Area / Side Area Separator Line
-    SDL_Color separator_color = AdjustTone(_bg_color, 32);
-    FillRect(separator, separator_color);
+        // Main Area / Side Area Separator Line
+        SDL_Rect separator = {
+            .x = side_area.x,
+            .y = tray_bot,
+            .w = 1,
+            .h = window_h - tray_bot
+        };
+        SDL_Color separator_color = AdjustTone(_bg_color, 32);
+        FillRect(separator, separator_color);
+    }
 
     int row = 0;
     int y = tray_bot;
@@ -419,7 +424,7 @@ static void DoEditorKey(SDL_Keycode key)
             break;
         case SDLK_s:
             if ( mods & CMD_KEY ) {
-                WriteBuffer(edit_path);
+                WriteBuffer(document_path);
             }
             break;
         case SDLK_v:
@@ -435,30 +440,23 @@ static void DoEditorKey(SDL_Keycode key)
     }
 }
 
-int main(int argc, char * argv[])
-{	
-    LoadConfig(argv[1]);
-    InitWindow();
+int Edit(const char * path)
+{
+    document_path = path;
+    LoadConfig(path);
+
+    const char * file_display_name = strrchr(path, PATH_SEP);
+    if ( file_display_name ) {
+        file_display_name++;
+    } else {
+        file_display_name = path;
+    }
+
+    InitWindow(file_display_name);
 
     SDL_AddEventWatch(EventWatch, NULL);
     keys = SDL_GetKeyboardState(NULL);
     SDL_StartTextInput();
-
-    FILE * file;
-    if ( argc == 2 ) {
-        edit_path = argv[1];
-        file = fopen(argv[1], "r");
-        if ( file == NULL ) {
-            AppendLine(NewLine());
-        } else {
-            LoadBuffer(file);
-            fclose(file);
-        }
-    } else {
-        fprintf(stderr, "Error: no file specified\n");
-        fprintf(stderr, "Usage: %s [path to edit]\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
 
     Redraw();
 
@@ -480,6 +478,9 @@ int main(int argc, char * argv[])
         while ( SDL_PollEvent(&event) ) {
             switch ( event.type ) {
                 case SDL_QUIT:
+                    if ( !(mods & KMOD_SHIFT) ) {
+                        WriteBuffer(document_path);
+                    }
                     quit_requested = true;
                     break;
                 case SDL_KEYDOWN: {
@@ -544,4 +545,6 @@ int main(int argc, char * argv[])
 
         SDL_Delay(20);
     }
+
+    return EXIT_SUCCESS;
 }
