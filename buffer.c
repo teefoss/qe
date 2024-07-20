@@ -100,6 +100,19 @@ void LoadBuffer(FILE * file)
 {
     ASSERT(file != NULL);
 
+    char string[2048];
+    while ( fgets(string, 2048, file) != NULL ) {
+        char * end = strchr(string, '\n');
+        if ( end ) {
+            *end = '\0';
+        }
+
+        Line * line = NewLine();
+        InsertChars(line, string, strlen(string), 0);
+        AppendLine(line);        
+    }
+
+#if 0
     char * string = NULL;
     size_t linecap = 0;
     ssize_t linelen;
@@ -113,6 +126,7 @@ void LoadBuffer(FILE * file)
         InsertChars(line, string, strlen(string), 0);
         AppendLine(line);
     }
+#endif
 }
 
 void WriteBuffer(const char * edit_path)

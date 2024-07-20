@@ -9,19 +9,12 @@
 #include "color.h"
 #include <errno.h>
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 #define MAX_KEYWORDS 256
 #define MAX_KEYWORD_LEN 64
-
-#ifdef __APPLE__
-    #define DEFAULT_FONT "/System/Library/Fonts/Monaco.ttf"
-#elifdef _WIN32
-    #define DEFAULT_FONT "C:/Windows/Fonts/consola.ttf"
-#elifdef __linux__
-    #define DEFAULT_FONT "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
-#else
-    #error "unsupported operating system!"
-#endif
 
 typedef enum {
     NO_OPT = -1,
@@ -72,25 +65,15 @@ typedef struct {
     const char * keywords[MAX_KEYWORDS]; // NULL-terminated list
 } Options;
 
-const Options global_options = {
-    .options = {
-        { .id = USE_SPACES, .bool_value = false },
-        { .id = CASE_SENSITIVE, .bool_value = false },
-        { .id = LINE_NUMBERS, .bool_value = false },
-        { .id = LINE_HIGHLIGHT, .bool_value = false },
-        { .id = FONT, .string_value = DEFAULT_FONT },
-        { .id = TAB_SIZE, .int_value = 4 },
-        { .id = FONT_SIZE, .int_value = 12 },
-        { .id = LINE_SPACING, .int_value = 0 },
-        { .id = COLUMN_LIMIT, .int_value = 0 },
-        { .id = WINDOW_WIDTH, .int_value = 640 },
-        { .id = WINDOW_HEIGHT, .int_value = 480 },
-        { .id = FOREGROUND_COLOR, .color_value = BLACK },
-        { .id = BACKGROUND_COLOR, .color_value = WHITE },
-        { .id = LINE_NUMBER_COLOR, .color_value = GRAY },
-    },
-    .keywords = { NULL }
-};
+#if defined(__APPLE__)
+    #define DEFAULT_FONT "/System/Library/Fonts/Monaco.ttf"
+#elif defined(PLATFORM_WINDOWS)
+    #define DEFAULT_FONT "C:/Windows/Fonts/consola.ttf"
+#elif defined (__linux__)
+    #define DEFAULT_FONT "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+#else
+    #error "unsupported operating system!"
+#endif
 
 Options c_options = {
     .options = {
@@ -435,7 +418,7 @@ void LoadConfig(const char * file_name)
 
     // Get the extension, i.e., the language for this file.
     // e.g. for file_name == 'main.c', load 'c.qe'
-    const char * ext = rindex(file_name, '.') + 1;
+    const char * ext = strrchr(file_name, '.') + 1;
     ParseConfig(ext);
 
 #if 0

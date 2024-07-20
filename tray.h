@@ -8,7 +8,8 @@
 #ifndef tray_h
 #define tray_h
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
+#include <stdbool.h> 
 
 typedef enum {
     TRAY_LINE_NUM,

@@ -13,9 +13,11 @@
 #include "window.h"
 
 //#include <stdbool.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <errno.h>
 #include <sys/stat.h> // linux/mac: mkdir
+#include <stdlib.h>
+#include <string.h>
 
 /*
  Features

@@ -10,6 +10,7 @@
 
 #include "qe.h"
 #include "color.h"
+#include <stdbool.h>
 
 extern bool _use_spaces;
 extern bool _case_sensitive;

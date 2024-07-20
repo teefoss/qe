@@ -8,10 +8,12 @@
 #ifndef qe_h
 #define qe_h
 
+#include "plat.h"
+
 #include <stdint.h>
 #include <stdio.h>
 //#include <stdbool.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #define STR_ARR_MAX 64
 
@@ -44,7 +46,6 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define CLAMP(val, min, max) (val < min ? min : val > max : max : val)
-#define EXTRACT_FIELD(value, mask)  (((value) & (mask)) >> __builtin_ctz(mask))
 
 typedef uint8_t u8;
 typedef uint16_t u16;
