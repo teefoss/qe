@@ -1,0 +1,15 @@
+# MacOS
+a.out
+*.qe
+qe.entitlements
+tags
+*.ttc
+*.ttf
+.DS_Store
+qe
+
+# Windows
+*.exe
+*.obj
+*.dll
+SDL2/
