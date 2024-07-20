@@ -7,6 +7,8 @@
 
 #include "config.h"
 #include "color.h"
+#include "plat.h"
+
 #include <errno.h>
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -153,54 +155,6 @@ static OptionMapping opt_map[] = {
     ENTRY( LINE_NUMBER_COLOR,  COLOR,      &_line_number_color ),
 };
 #undef ENTRY
-
-static char * ApplicationDirectory(void)
-{
-    static char path[PATH_MAX] = { 0 };
-
-    if ( path[0] == '\0') {
-        const char * home = getenv("HOME");
-        if ( home == NULL ) {
-            DieGracefully("could not get user home directory\n");
-        }
-
-        strcpy(path, home);
-        strcat(path, "/.qe");
-    }
-
-    return path;
-}
-
-static bool ApplicationDirectoryExists(void)
-{
-    char * app_dir = ApplicationDirectory();
-    struct stat info;
-    if ( stat(app_dir, &info) != 0 ) {
-        return false;
-    } else if ( info.st_mode & S_IFDIR ) {
-        return true;
-    }
-
-    // TODO: test this
-    DieGracefully("Error: a file with the same name as the application "
-                  "directory already exists -- %s\n", app_dir);
-    return false;
-}
-
-static void CreateApplicationDirectory(void)
-{
-    char * path = ApplicationDirectory();
-
-    errno = 0;
-    if ( mkdir(path, 0755) == -1 ) {
-        if ( errno != EEXIST ) {
-            DieGracefully("could not create application directory "
-                          "'%s': (%s)", path, strerror(errno));
-        }
-    } else {
-        printf("created directory '%s'\n", path);
-    }
-}
 
 static char * GetOrCreateApplicationDirectory(void)
 {
