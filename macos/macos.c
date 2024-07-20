@@ -1,4 +1,8 @@
 #include "plat.h"
+#include "qe.h"
+
+#include <sys/stat.h>
+#include <errno.h>
 
 char * ApplicationDirectory(void)
 {

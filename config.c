@@ -10,7 +10,6 @@
 #include "plat.h"
 
 #include <errno.h>
-#include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
