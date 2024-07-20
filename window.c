@@ -10,7 +10,7 @@
 #include "config.h"
 #include <stdarg.h>
 #include <stdlib.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL_ttf.h>
 
 const int font_sizes[] = {
     5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 30, 36, 42, 48, 60, 72

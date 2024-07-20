@@ -9,6 +9,9 @@
 #include "color.h"
 #include <errno.h>
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 typedef enum {
     INTEGER,
@@ -26,11 +29,11 @@ typedef struct {
 
 static int num_options;
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
     #define DEFAULT_FONT "/System/Library/Fonts/Monaco.ttf"
-#elifdef _WIN32
+#elif defined(PLATFORM_WINDOWS)
     #define DEFAULT_FONT "C:/Windows/Fonts/consola.ttf"
-#elifdef __linux__
+#elif defined (__linux__)
     #define DEFAULT_FONT "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
 #else
     #error "unsupported operating system!"
@@ -248,7 +251,7 @@ void LoadConfig(const char * file_name)
 
     // The the extension, i.e., the language for this file.
     // e.g. for file_name == 'main.c', load 'c.qe'
-    const char * ext = rindex(file_name, '.') + 1;
+    const char * ext = strrchr(file_name, '.') + 1;
 
     char * app_dir = GetOrCreateApplicationDirectory();
     char path[PATH_MAX] = { 0 };

@@ -12,9 +12,11 @@
 #include "window.h"
 
 //#include <stdbool.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <errno.h>
 #include <sys/stat.h> // linux/mac: mkdir
+#include <stdlib.h>
+#include <string.h>
 
 /*
  Features
@@ -433,8 +435,8 @@ static void DoEditorKey(SDL_Keycode key)
     }
 }
 
-int main(int argc, const char * argv[argc])
-{
+int main(int argc, char * argv[])
+{	
     LoadConfig(argv[1]);
     InitWindow();
 

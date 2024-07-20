@@ -1,0 +1,1 @@
+cl /DPLATFORM_WINDOWS *.c /I "SDL2\include" /link "SDL2\lib\SDL2.lib" "SDL2\lib\SDL2main.lib" "SDL2\lib\SDL2_ttf.lib" "/SUBSYSTEM:CONSOLE" "shell32.lib" /out:qe.exe

@@ -9,7 +9,7 @@
 #define WINDOW_H
 
 #include "color.h"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 extern int _margin;
 extern int _char_w;
