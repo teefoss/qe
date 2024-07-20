@@ -1,0 +1,4 @@
+TODO:
+
+BUGS:
+- crashing when entering new line at 0, 0

@@ -139,3 +139,6 @@ MULTILINE CURSOR
 C-A-UP          extend multiline cursor up
 C-A-DOWN        extend multiline cursor down
 ESCAPE          restore normal cursor
+
+OTHER
+                Reload config files

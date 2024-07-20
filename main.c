@@ -8,8 +8,10 @@
 #include "buffer.h"
 #include "config.h"
 #include "window.h"
-//#include <unistd.h>
-#include <getopt.h>
+#include "args.h"
+
+#include <stdlib.h>
+#include <stdarg.h>
 
 #define PROGRAM_NAME "qe"
 #define VERSION_MAJOR 0
@@ -19,9 +21,11 @@ static void PrintUsage(void)
 {
     puts("Usage: " PROGRAM_NAME " (options) [file]");
     puts("Options:");
-    puts("    -c, --create       Create the file if it does not exist.");
-    puts("    -v, --version      Display version information.");
-    puts("    -h, --help         Show this information.");
+    puts("  -l, --line <number>  Select line <number> after opening file.");
+    puts("  -c, --create         Create the file if it does not exist.");
+    puts("  -v, --version        Display version information.");
+    puts("  -h, --help           Show this information.");
+    puts("  --config [path]      Load config file specified by 'path'.");
 }
 
 static void Error(const char * message, ...)
@@ -36,42 +40,38 @@ static void Error(const char * message, ...)
 
 int main(int argc, char ** argv)
 {
+    InitArgs(argc, argv);
+
     if ( argc == 1 ) {
-        Error(PROGRAM_NAME": no file specified.");
+        PrintUsage();
+        return EXIT_FAILURE;
     }
 
-    const struct option options[] = {
-        { "create", no_argument, NULL, 'c' },
-        { "help", no_argument, NULL, 'h' },
-        { "version", no_argument, NULL, 'v' },
-        { "config", required_argument, NULL, 0 },
-        { 0 },
-    };
-
-    bool create = false;
-    int opt;
-    while ( (opt = getopt_long(argc, argv, "cvh", options, NULL)) != -1 ) {
-        switch ( opt ) {
-            case 'c':
-                create = true;
-                break;
-            case 'v':
-                printf("qe Version %d.%d\n", VERSION_MAJOR, VERSION_MINOR);
-                printf("Copyright (C) Thomas Foster 2024\n");
-                break;
-            case 'h':
-                PrintUsage();
-                return EXIT_SUCCESS;
-            case '?':
-                Error(PROGRAM_NAME": invalid option '%c'", opt);
-            case ':':
-                Error(PROGRAM_NAME": option '%c' requires argument", opt);
-            default:
-                Error(PROGRAM_NAME": bad arguments");
-        }
+    if ( GetOption("--help", "-h") ) {
+        PrintUsage();
+        return EXIT_SUCCESS;
     }
 
-    const char * document_path = argv[optind];
+    if ( GetOption("--version", "-v") ) {
+        printf("qe Version %d.%d\n", VERSION_MAJOR, VERSION_MINOR);
+        printf("Copyright (C) Thomas Foster 2024\n");
+        return EXIT_SUCCESS;
+    }
+
+    char * config_file = GetOption("--config", NULL);
+    if ( config_file ) {
+        printf("%s\n", config_file); // TODO: load
+    }
+
+    bool create = GetOption("--create", "-c");
+
+    char * number_arg = GetOption("--line", "-l");
+    if ( number_arg ) {
+        int line_number = atoi(number_arg);
+        // TODO: Scroll()
+    }
+
+    const char * document_path = argv[argc - 1];
 
     FILE * file = fopen(document_path, "r");
     if ( file == NULL ) {
