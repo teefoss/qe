@@ -75,6 +75,26 @@ typedef struct {
     #error "unsupported operating system!"
 #endif
 
+const Options global_options = {
+    .options = {
+        { .id = USE_SPACES, .bool_value = false },
+        { .id = CASE_SENSITIVE, .bool_value = false },
+        { .id = LINE_NUMBERS, .bool_value = false },
+        { .id = LINE_HIGHLIGHT, .bool_value = false },
+        { .id = FONT, .string_value = DEFAULT_FONT },
+        { .id = TAB_SIZE, .int_value = 4 },
+        { .id = FONT_SIZE, .int_value = 12 },
+        { .id = LINE_SPACING, .int_value = 0 },
+        { .id = COLUMN_LIMIT, .int_value = 0 },
+        { .id = WINDOW_WIDTH, .int_value = 640 },
+        { .id = WINDOW_HEIGHT, .int_value = 480 },
+        { .id = FOREGROUND_COLOR, .color_value = BLACK },
+        { .id = BACKGROUND_COLOR, .color_value = WHITE },
+        { .id = LINE_NUMBER_COLOR, .color_value = GRAY },
+    },
+    .keywords = { NULL }
+};
+
 Options c_options = {
     .options = {
         { .id = CASE_SENSITIVE, .bool_value = true },
