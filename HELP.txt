@@ -1,0 +1,141 @@
+WARNINGS
+
+- qe is not designed to handle non-monospace fonts.
+
+--------------
+CONFIG LOADING
+--------------
+
+When qe is first run, it creates a directory called .qe in the user's
+home folder. Whenever qe is run, loads three config files in the order shown
+below. Options defined in subsequent loaded config files take presedence.
+
+1.  'global.qe' in HOME/.qe/
+2.  '[ext].qe' in HOME/.qe (where 'ext' is the extention of the file
+    being edited)
+3.  'local.qe' in the present working directory, if present.
+
+--------------
+CONFIG OPTIONS
+--------------
+
+Config Value Types:
+BOOLEAN:    'true' or 'false'
+INTEGER:    '0', '1', '2', etc...
+TEXT:       any text not containing spaces, e.g. 'user/fonts/courier.ttf'
+COLOR:      any of the colors defined in the 'COLORS' section of this file.
+
+CONFIG ENTRIES
+
+use_spaces:         (BOOLEAN) Tabs entered are converted into spaces.
+tab_size:           (BOOLEAN) The number of visual spaces tabs appears as.
+line_numbers:       (BOOLEAN) Whether line numbers are shown or not.
+line_highlight:     (BOOLEAN) Whether the current line is highlighted.
+
+font:               (TEXT) The path to the .ttf or .ttc font to use.
+font_size:          (INTEGER) The font size in points.
+line_spacing:       (INTEGER) The separation between text lines in pixels.
+column_limit:       (INTEGER) A vertical indicator displayed at the given
+                    number of characters. This can be turned off by giving a
+                    value of '0'.
+window_width:       (INTEGER) The width of the window in pixels on launch.
+                    A value of '0' indicates the window should size exactly to
+                    the column limit as specificed by 'column_limit', or to the
+                    default of 640 if column_limit is 0.
+window_height:
+foreground_color:   (COLOR) The text color.
+background_color:   (COLOR) The color of the background behind text.
+line_number_color:  (COLOR) The color of the line numbers.
+
+keyword:            (TEXT) Define a language keyword for syntax highlighting.
+                    A config file may have multiple keyword entries.
+case_sensitive      (BOOLEAN) Indicates whether syntax highlighting takes into
+                    account the case of keywords.
+
+------
+COLORS
+------
+
+BLACK
+WHITE
+GRAY
+BLUE
+GREEN
+CYAN
+RED
+PURPLE
+PINK
+BROWN
+ORANGE
+YELLOW
+DARK_GRAY
+DARK_BLUE
+DARK_GREEN
+DARK_CYAN
+DARK_RED
+DARK_PURPLE
+LIGHT_GRAY
+LIGHT_BLUE
+LIGHT_GREEN
+LIGHT_CYAN
+LIGHT_RED
+
+------------
+KEY BINDINGS
+------------
+
+Abbreviations:
+'C' = COMMAND key (Mac) or CTRL key (Windows/Linux)
+'A' = ALT key
+'S' = SHIFT key
+'CAPS' = CAPS LOCK key
+
+FILE
+C-S             Save*
+C-O             Save and Open*
+C-              Save and Open Counterpart (e.g. foo.h <-> foo.c)*
+C-Q             Save and Quit*
+C-S-Q           Quit without Saving*
+
+EDITING
+C-C             Copy
+C-V             Paste
+C-X             Cut
+C-Z             Undo
+C-S-Z           Redo
+C-I             Auto-indent selection
+CAPS-F          Finish (Autocomplete)
+
+NAVIGATION
+C-L             Move Cursor to Line
+A-UP, PGUP      Move Cursor One Half-screen Up
+A-DOWN, PGDN    Move Cursor One Half-screen Down
+A-LEFT          Move Cursor One Word Left
+A-RIGHT         Move Cursor One Word Right
+C-UP            Move Cursor to Start of Document
+C-DOWN          Move Cursor to End of Document
+C-LEFT          Move Cursor to Start of Line
+C-RIGHT         Move Cursor to End of Line
+
+SCRIPT EXECUTION, ETC.
+C-R             execute run.sh (MacOS/Linux) or run.bat (Windows)
+C-B             execute build.sh (MacOS/Linux) or build.bat (Windows)
+C-M             execute make (MacOS/Linux only, probably)
+
+TEXT SELECTION
+CAPS-R          select row (line)
+CAPS-W          select word
+CAPS-S          select to start of line
+CAPS-E          select to end of line
+CAPS-C          select character (equivalent to DEL)
+CAPS-D          select character before cursor (equivalent to BACKSPACE)
+CAPS-A          select character after cursor
+
+DELETION
+S-CAPS-R        delete row (line)
+S-CAPS-W        delete word
+
+MULTILINE CURSOR
+C-A-UP          extend multiline cursor up
+C-A-DOWN        extend multiline cursor down
+ESCAPE          restore normal cursor
