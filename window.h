@@ -15,7 +15,7 @@ extern int _margin;
 extern int _char_w;
 extern int _char_h;
 
-void InitWindow(void);
+void InitWindow(const char * window_title);
 int  WindowWidth(void);
 int  WindowHeight(void);
 void UpdateWindow(void);
