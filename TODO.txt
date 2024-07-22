@@ -1,4 +1,7 @@
 TODO:
+jump to prev/next char?
+C-A-UP/DOWN - beginning of doc
+C-UP/DOWN - pgup/pgdn
 
 BUGS:
 - crashing when entering new line at 0, 0

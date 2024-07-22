@@ -12,6 +12,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <SDL_ttf.h>
 
 #define PROGRAM_NAME "qe"
 #define VERSION_MAJOR 0
@@ -25,9 +26,10 @@ static void PrintUsage(void)
     puts("  -c, --create         Create the file if it does not exist.");
     puts("  -v, --version        Display version information.");
     puts("  -h, --help           Show this information.");
-    puts("  --config [path]      Load config file specified by 'path'.");
+    puts("  --config [path]      Load config file at 'path'.");
 }
 
+#if 0 // TODO: Might need this elsewhere.
 static void Error(const char * message, ...)
 {
     va_list args;
@@ -37,6 +39,7 @@ static void Error(const char * message, ...)
     PrintUsage();
     exit(EXIT_FAILURE);
 }
+#endif
 
 int main(int argc, char ** argv)
 {
@@ -65,32 +68,24 @@ int main(int argc, char ** argv)
 
     bool create = GetOption("--create", "-c");
 
-    char * number_arg = GetOption("--line", "-l");
-    if ( number_arg ) {
-        int line_number = atoi(number_arg);
-        // TODO: Scroll()
+    int line_number = 0;
+    char * line_number_arg = GetOption("--line", "-l");
+    if ( line_number_arg ) {
+        line_number = atoi(line_number_arg) - 1;
     }
 
-    const char * document_path = argv[argc - 1];
-
-    FILE * file = fopen(document_path, "r");
-    if ( file == NULL ) {
-        if ( create ) {
-            file = fopen(document_path, "w");
-            if ( file == NULL ) {
-                printf(PROGRAM_NAME": failed to create '%s'", document_path);
-                return EXIT_FAILURE;
-            }
-            AppendLine(NewLine());
-        } else {
-            printf(PROGRAM_NAME": Could not open '%s'. Does it exist?\n",
-                   document_path);
-            return EXIT_FAILURE;
-        }
-    } else {
-        LoadBuffer(file);
+    if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) {
+        fprintf(stderr, "Could not initialize SDL: %s\n", SDL_GetError());
+        return EXIT_FAILURE;
     }
 
-    fclose(file);
-    return Edit(document_path);
+    if ( TTF_Init() != 0 ) {
+        fprintf(stderr, "TTF_Init failed: %s\n", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    InitWindow();
+    LoadDocument(argv[argc - 1], create, line_number);
+
+    return ProgramLoop();
 }

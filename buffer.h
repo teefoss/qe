@@ -10,14 +10,20 @@
 
 #include "line.h"
 
-size_t  LineCount(void);
-void LoadBuffer(FILE * file);
-void WriteBuffer(const char * edit_path);
-Line * GetLine(int number);
-void InsertLineBefore(Line * line, Line * next);
-void InsertLineAfter(Line * line, Line * prev);
-void AppendLine(Line * line);
-void RemoveLine(Line * line);
-int LineNumCols(void);
+typedef struct {
+    Line * head;
+    Line * tail;  // TODO: this may not be needed
+    size_t num_lines;
+} Buffer;
+
+void    LoadBuffer(Buffer *, FILE * file);
+void    FreeBuffer(Buffer * buffer);
+void    WriteBuffer(Buffer *, const char * path);
+Line *  GetLine(Buffer *, int number);
+void    InsertLineBefore(Buffer *, Line * line, Line * next);
+void    InsertLineAfter(Buffer *, Line * line, Line * prev);
+void    AppendLine(Buffer *, Line * line);
+void    RemoveLine(Buffer *, Line * line);
+int     LineNumCols(Buffer *);
 
 #endif /* buffer_h */

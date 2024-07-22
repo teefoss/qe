@@ -53,9 +53,10 @@ typedef uint32_t u32;
 
 typedef enum { UP, DOWN, LEFT, RIGHT } Direction;
 
+void LoadDocument(const char * path, bool create, int line_number);
 int CaseCompare(const char * a, const char * b);
 void DieGracefully(const char * message, ...);
 void Scroll(size_t new_line_num);
-int Edit(const char * path);
+int ProgramLoop(void);
 
 #endif /* qe_h */

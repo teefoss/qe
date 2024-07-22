@@ -17,7 +17,7 @@ Line * NewLine(void)
     return line;
 }
 
-void InsertChars(Line * line, char * string, size_t len, int x)
+void InsertChars(Line * line, char * string, int len, int x)
 {
     if ( len == 0 ) {
         return;
@@ -45,10 +45,53 @@ void InsertChars(Line * line, char * string, size_t len, int x)
     strncpy(insert_point, string, len);
 }
 
-void RemoveChars(Line * line, size_t count, int x)
+void RemoveChars(Line * line, int count, int x)
 {
     memmove(line->chars + x,
             line->chars + x + count,
             (line->len + 1) - (x + count));
     line->len -= count;
+}
+
+static bool IsIdentifierChar(char ch)
+{
+    return SDL_isalnum(ch) || ch == '_';
+}
+
+/**
+ *  Move cursor (`cx`) to the position after the current or next alpha-numeric
+ *  word.
+ */
+void JumpToEndOfWord(Line * line, int * cx)
+{
+    bool in_identifier = false; // Cursor is currently inside an identifier.
+    bool is_identifier_char = false; // Character at cx is an identifier character.
+
+    do {
+        if ( *cx == line->len ) {
+            break;
+        }
+
+        (*cx)++;
+        is_identifier_char = IsIdentifierChar(line->chars[*cx]);
+
+        if ( is_identifier_char ) {
+            in_identifier = true;
+        }
+    } while ( !in_identifier || is_identifier_char );
+}
+
+void JumpToBeginningOfWord(Line * line, int * cx)
+{
+    bool in_identifier = false; // Cursor is currently inside an identifier.
+    bool next_is_identifier_char = false;
+
+    while ( *cx > 0 ) {
+        (*cx)--;
+        char this = line->chars[*cx];
+        char prev = line->chars[*cx - 1];
+        if ( IsIdentifierChar(this) && !IsIdentifierChar(prev) ) {
+            break;
+        }
+    };
 }

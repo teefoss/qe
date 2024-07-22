@@ -20,13 +20,17 @@ typedef struct {
 typedef struct line {
     char * chars; // allocated size is always length + 1
     Color * char_colors;
-    size_t len;
+    int len;
     struct line * prev;
     struct line * next;
 } Line;
 
 Line * NewLine(void);
-void InsertChars(Line * line, char * string, size_t len, int x);
-void RemoveChars(Line * line, size_t count, int x);
+void InsertChars(Line * line, char * string, int len, int x);
+void RemoveChars(Line * line, int count, int x);
+void JumpToEndOfWord(Line * line, int * cx);
+void JumpToBeginningOfWord(Line * line, int * cx);
+
+// TODO: DrawLine(const Line * line, int line_num, bool highlighted)
 
 #endif /* line_h */

@@ -1,3 +1,5 @@
+* = Not implemented yet.
+
 WARNINGS
 
 - qe is not designed to handle non-monospace fonts.
@@ -91,25 +93,25 @@ Abbreviations:
 'CAPS' = CAPS LOCK key
 
 FILE
-C-S             Save*
+C-S             Save
 C-O             Save and Open*
 C-              Save and Open Counterpart (e.g. foo.h <-> foo.c)*
 C-Q             Save and Quit*
 C-S-Q           Quit without Saving*
 
 EDITING
-C-C             Copy
+C-C*            Copy
 C-V             Paste
-C-X             Cut
-C-Z             Undo
-C-S-Z           Redo
-C-I             Auto-indent selection
-CAPS-F          Finish (Autocomplete)
+C-X*            Cut
+C-Z*            Undo
+C-S-Z*          Redo
+C-I*            Auto-indent selection
+CAPS-F*         Finish (Autocomplete)
 
-NAVIGATION
+NAVIGATION*
 C-L             Move Cursor to Line
-A-UP, PGUP      Move Cursor One Half-screen Up
-A-DOWN, PGDN    Move Cursor One Half-screen Down
+A-UP*, PGUP     Move Cursor One Half-screen Up
+A-DOWN*, PGDN   Move Cursor One Half-screen Down
 A-LEFT          Move Cursor One Word Left
 A-RIGHT         Move Cursor One Word Right
 C-UP            Move Cursor to Start of Document
@@ -118,27 +120,29 @@ C-LEFT          Move Cursor to Start of Line
 C-RIGHT         Move Cursor to End of Line
 
 SCRIPT EXECUTION, ETC.
-C-R             execute run.sh (MacOS/Linux) or run.bat (Windows)
-C-B             execute build.sh (MacOS/Linux) or build.bat (Windows)
-C-M             execute make (MacOS/Linux only, probably)
+Run scripts or batch files in the current working directory, if present.
+C-R*            execute run.sh (MacOS/Linux) or run.bat (Windows)
+C-B*            execute build.sh (MacOS/Linux) or build.bat (Windows)
+C-M*            execute make (MacOS/Linux only, probably)
 
 TEXT SELECTION
-CAPS-R          select row (line)
-CAPS-W          select word
-CAPS-S          select to start of line
-CAPS-E          select to end of line
-CAPS-C          select character (equivalent to DEL)
-CAPS-D          select character before cursor (equivalent to BACKSPACE)
-CAPS-A          select character after cursor
+CAPS-R*         select row (line)
+CAPS-W*         select word
+CAPS-S*         select to start of line
+CAPS-E*         select to end of line
+CAPS-C*         select character (equivalent to DEL)
+CAPS-D*         select character before cursor (equivalent to BACKSPACE)
+CAPS-A*         select character after cursor
 
 DELETION
-S-CAPS-R        delete row (line)
-S-CAPS-W        delete word
+S-CAPS-R*       delete row (line)
+S-CAPS-W*       delete word
+...
 
 MULTILINE CURSOR
-C-A-UP          extend multiline cursor up
-C-A-DOWN        extend multiline cursor down
-ESCAPE          restore normal cursor
+C-A-UP*         extend multiline cursor up
+C-A-DOWN*       extend multiline cursor down
+ESCAPE*         restore normal cursor
 
 OTHER
-                Reload config files
+                Reload config files*

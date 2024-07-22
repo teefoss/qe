@@ -12,42 +12,25 @@
 #include "tray.h"
 #include "window.h"
 
-//#include <stdbool.h>
 #include <SDL.h>
-#include <errno.h>
-#include <sys/stat.h> // linux/mac: mkdir
 #include <stdlib.h>
 #include <string.h>
-
-/*
- Features
- jump back to prev char
- hold backspace + ...
- ... w delete word
- ... c delete char
- ... l delete line
- - or -
- ctrl-d to enter delete mode, then w for word, etc.
-
- pgup - jump to top of visible lines
- C-left word left
- C-A-left beginning line
- C-up pgup
- C-A-up beginning of doc
- */
 
 #define BLINK_MS 333
 
 static const u8 * keys;
 static SDL_Keymod mods;
 
+static Buffer buffer;
 static const char * document_path;
+
 static float top_line_num_f;
-static int top_line_num;
-static int cx;
-static int cy;
+static int top_line_num; // The line visible at the top
+
+static int cx, cy; // Cursor position
 static bool cursor_blink = true;
 static int next_blink_time;
+
 static bool needs_refresh;
 
 int CaseCompare(const char * a, const char * b)
@@ -73,7 +56,7 @@ void DieGracefully(const char * message, ...)
 
 static void Redraw(void)
 {
-    int line_num_cols = LineNumCols();
+    int line_num_cols = LineNumCols(&buffer);
     int text_x = (line_num_cols + 1) * _char_w + _margin;
 
     int window_w = WindowWidth();
@@ -118,7 +101,7 @@ static void Redraw(void)
     int line_num = top_line_num;
     float partial_line_y = top_line_num_f - floorf(top_line_num_f);
 
-    for ( line = GetLine((int)top_line_num_f);
+    for ( line = GetLine(&buffer, (int)top_line_num_f);
           line != NULL && y < window_h;
           line = line->next, row++, y += _char_h + _line_spacing, line_num++ )
     {
@@ -158,12 +141,54 @@ static void Redraw(void)
     UpdateWindow();
 }
 
+void LoadDocument(const char * path, bool create, int line_number)
+{
+    FreeBuffer(&buffer);
+    document_path = path;
+
+    FILE * file = fopen(document_path, "r");
+    if ( file == NULL ) {
+        if ( create ) {
+            file = fopen(document_path, "w");
+            if ( file == NULL ) {
+                printf("error: failed to create '%s'", document_path);
+                exit(EXIT_FAILURE);
+            }
+            AppendLine(&buffer, NewLine());
+        } else {
+            printf("error: Could not open '%s'. Does it exist?\n",
+                   document_path);
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        LoadBuffer(&buffer, file);
+    }
+
+    fclose(file);
+    LoadConfig(document_path);
+
+    LoadFont();
+
+    const char * display_name = strrchr(document_path, PATH_SEP);
+    if ( display_name ) {
+        display_name++;
+    } else {
+        display_name = path;
+    }
+
+    SetWindowTitle(display_name);
+    Redraw();
+}
+
+/**
+ *  Scroll editor to `new_line_num` (zero-indexed).
+ */
 void Scroll(size_t new_line_num)
 {
     if ( new_line_num < 0 ) {
         new_line_num = 0;
-    } else if ( new_line_num >= LineCount() ) {
-        new_line_num = LineCount() - 1;
+    } else if ( new_line_num >= buffer.num_lines ) {
+        new_line_num = buffer.num_lines - 1;
     }
 
     cy = (int)new_line_num;
@@ -196,7 +221,7 @@ static void RestartCursor(void)
 
 static void MoveCursor(Direction direction)
 {
-    Line * current = GetLine(cy);
+    Line * current = GetLine(&buffer, cy);
 
     switch ( direction ) {
         case UP:
@@ -245,7 +270,7 @@ static void MoveCursor(Direction direction)
             return;
     }
 
-    Line * line = GetLine(cy);
+    Line * line = GetLine(&buffer, cy);
 
     if ( cx > line->len ) {
         cx = line->len; // snap to end of line
@@ -256,19 +281,19 @@ static void MoveCursor(Direction direction)
 
 static void InsertNewLine(void)
 {
-    Line * current = GetLine(cy);
+    Line * current = GetLine(&buffer, cy);
     Line * newline = NewLine();
 
     if ( cy == 0 && cx == 0 ) {
-        InsertLineBefore(newline, current);
+        InsertLineBefore(&buffer, newline, current);
     } else if ( cx == 0 ) {
-        InsertLineAfter(newline, current->prev);
+        InsertLineAfter(&buffer, newline, current->prev);
     } else if ( cx == current->len ) {
-        InsertLineAfter(newline, current);
+        InsertLineAfter(&buffer, newline, current);
     } else { // We are mid-line.
-        InsertLineAfter(newline, current);
+        InsertLineAfter(&buffer, newline, current);
         char * cursor_string = current->chars + cx;
-        InsertChars(newline, cursor_string, strlen(cursor_string), 0);
+        InsertChars(newline, cursor_string, (int)strlen(cursor_string), 0);
         RemoveChars(current, current->len - cx, cx);
     }
 
@@ -282,13 +307,13 @@ static void Backspace(void)
         return;
     }
 
-    Line * current = GetLine(cy);
+    Line * current = GetLine(&buffer, cy);
 
     if ( cx == 0 ) { // Append current line onto end of previous line.
         --cy;
         cx = current->prev->len;
-        InsertChars(current->prev, current->chars, strlen(current->chars), cx);
-        RemoveLine(current);
+        InsertChars(current->prev, current->chars, (int)strlen(current->chars), cx);
+        RemoveLine(&buffer, current);
     } else { // We are mid-line.
         RemoveChars(current, 1, cx - 1);
         cx--;
@@ -306,16 +331,16 @@ static void PasteFromClipboard(void)
 
     // Handle new line characters that may be present in the pasted text.
     do {
-        Line * line = GetLine(cy);
+        Line * line = GetLine(&buffer, cy);
         char * next = strchr(this, '\n');
 
         // Calculate the length of 'this':
-        size_t this_len;
+        int this_len;
         if ( next ) {
-            this_len = next - this;
+            this_len = (int)(next - this);
             next++; // Advance past the new line.
         } else {
-            this_len = strlen(this);
+            this_len = (int)strlen(this);
         }
 
         InsertChars(line, this, this_len, cx);
@@ -333,7 +358,7 @@ static void PasteFromClipboard(void)
 
 void JumpToBeginningOfLine(void)
 {
-    Line * line = GetLine(cy);
+    Line * line = GetLine(&buffer, cy);
     if ( line->len == 0 ) {
         return;
     }
@@ -364,22 +389,27 @@ static void DoEditorKey(SDL_Keycode key)
             break;
         case SDLK_DOWN:
             if ( mods & CMD_KEY ) {
-                Scroll(LineCount() - 1);
+                Scroll(buffer.num_lines - 1);
             } else {
                 MoveCursor(DOWN);
             }
             break;
-        case SDLK_RIGHT:
+        case SDLK_RIGHT: {
+            Line * line = GetLine(&buffer, cy);
             if ( mods & CMD_KEY ) {
-                Line * line = GetLine(cy);
                 cx = line->len;
+            } else if ( mods & KMOD_ALT ) {
+                JumpToEndOfWord(line, &cx);
             } else {
                 MoveCursor(RIGHT);
             }
             break;
+        }
         case SDLK_LEFT:
             if ( mods & CMD_KEY ) {
                 JumpToBeginningOfLine();
+            } else if ( mods & KMOD_ALT ) {
+                JumpToBeginningOfWord(GetLine(&buffer, cy), &cx);
             } else {
                 MoveCursor(LEFT);
             }
@@ -424,7 +454,7 @@ static void DoEditorKey(SDL_Keycode key)
             break;
         case SDLK_s:
             if ( mods & CMD_KEY ) {
-                WriteBuffer(document_path);
+                WriteBuffer(&buffer, document_path);
             }
             break;
         case SDLK_v:
@@ -440,25 +470,11 @@ static void DoEditorKey(SDL_Keycode key)
     }
 }
 
-int Edit(const char * path)
+int ProgramLoop(void)
 {
-    document_path = path;
-    LoadConfig(path);
-
-    const char * file_display_name = strrchr(path, PATH_SEP);
-    if ( file_display_name ) {
-        file_display_name++;
-    } else {
-        file_display_name = path;
-    }
-
-    InitWindow(file_display_name);
-
     SDL_AddEventWatch(EventWatch, NULL);
     keys = SDL_GetKeyboardState(NULL);
     SDL_StartTextInput();
-
-    Redraw();
 
     bool quit_requested = false;
     RestartCursor();
@@ -479,7 +495,7 @@ int Edit(const char * path)
             switch ( event.type ) {
                 case SDL_QUIT:
                     if ( !(mods & KMOD_SHIFT) ) {
-                        WriteBuffer(document_path);
+                        WriteBuffer(&buffer, document_path);
                     }
                     quit_requested = true;
                     break;
@@ -513,7 +529,7 @@ int Edit(const char * path)
                         if ( TrayIsOpen() ) {
                             DoTrayTextInput(event.text.text[0]);
                         } else {
-                            InsertChars(GetLine(cy), &event.text.text[0], 1, cx);
+                            InsertChars(GetLine(&buffer, cy), &event.text.text[0], 1, cx);
                             cx++;
                         }
                         needs_refresh = true;

@@ -30,6 +30,7 @@ static TrayType type;
 static float bottom;
 Line buffer;
 static int cx;
+static Buffer buf;
 
 float TrayBottom(void)
 {
@@ -79,7 +80,7 @@ void DoTrayKey(SDL_Keycode key)
                     break;
                 }
 
-                if ( line_num > 0 && line_num <= LineCount() ) {
+                if ( line_num > 0 && line_num <= buf.num_lines ) {
                     Scroll(line_num - 1);
                     CloseTray();
                 }
