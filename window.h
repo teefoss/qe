@@ -11,9 +11,8 @@
 #include "color.h"
 #include <SDL.h>
 
+extern int _draw_scale;
 extern int _margin;
-extern int _char_w;
-extern int _char_h;
 
 void InitWindow(void);
 void LoadFont(void);
@@ -27,5 +26,6 @@ void FillRect(SDL_Rect rect, SDL_Color color);
 void DrawString(int x, int y, Color color, const char * string);
 void DrawFormat(int x, int y, Color color, const char * format, ...);
 void ChangeFontSize(int incrememnt);
+int Margin(void);
 
 #endif /* WINDOW_H */

@@ -9,6 +9,7 @@
 
 #include "buffer.h"
 #include "config.h"
+#include "font.h"
 #include "tray.h"
 #include "window.h"
 
@@ -501,6 +502,7 @@ int ProgramLoop(void)
                     break;
                 case SDL_KEYDOWN: {
                     needs_refresh = true;
+                    RestartCursor();
 
                     switch ( event.key.keysym.sym ) {
                         case SDLK_EQUALS:

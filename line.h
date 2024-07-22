@@ -19,7 +19,7 @@ typedef struct {
 
 typedef struct line {
     char * chars; // allocated size is always length + 1
-    Color * char_colors;
+    Color * char_colors; // TODO: syntax highlighting
     int len;
     struct line * prev;
     struct line * next;

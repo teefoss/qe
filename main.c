@@ -5,14 +5,13 @@
 //  Created by Thomas Foster on 7/17/24.
 //
 
+#include "args.h"
 #include "buffer.h"
 #include "config.h"
+#include "font.h"
 #include "window.h"
-#include "args.h"
 
 #include <stdlib.h>
-#include <stdarg.h>
-#include <SDL_ttf.h>
 
 #define PROGRAM_NAME "qe"
 #define VERSION_MAJOR 0
@@ -29,7 +28,7 @@ static void PrintUsage(void)
     puts("  --config [path]      Load config file at 'path'.");
 }
 
-#if 0 // TODO: Might need this elsewhere.
+#if 0 // TODO: Use in logging, move.
 static void Error(const char * message, ...)
 {
     va_list args;
@@ -79,12 +78,8 @@ int main(int argc, char ** argv)
         return EXIT_FAILURE;
     }
 
-    if ( TTF_Init() != 0 ) {
-        fprintf(stderr, "TTF_Init failed: %s\n", SDL_GetError());
-        exit(EXIT_FAILURE);
-    }
-
     InitWindow();
+    InitFont();
     LoadDocument(argv[argc - 1], create, line_number);
 
     return ProgramLoop();

@@ -6,27 +6,19 @@
 //
 
 #include "window.h"
+
 #include "buffer.h"
 #include "config.h"
+#include "font.h"
+
 #include <stdarg.h>
 #include <stdlib.h>
-#include <SDL_ttf.h>
 
-static const int num_font_sizes = 20;
-const int font_sizes[] = {
-    5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 30, 36, 42, 48, 60, 72
-};
-
+int _draw_scale;
 int _margin;
-int _char_w;
-int _char_h;
 
 static SDL_Window * window;
 static SDL_Surface * window_surface;
-
-static TTF_Font * font;
-static int draw_scale;
-static int font_index; // index into `font_size`, current font size.
 
 int WindowWidth(void)
 {
@@ -46,38 +38,6 @@ void UpdateWindow(void)
 void WindowDidResize(void)
 {
     window_surface = SDL_GetWindowSurface(window);
-}
-
-static int GetFontIndex(int size)
-{
-    for ( int i = 0; i < num_font_sizes; i++ ) {
-        if ( font_sizes[i] >= size ) {
-            return i;
-        }
-    }
-
-    return num_font_sizes - 1;
-}
-
-void ChangeFontSize(int incrememnt)
-{
-    font_index += incrememnt;
-    if ( font_index < 0 ) {
-        font_index = 0;
-    } else if ( font_index >= num_font_sizes ) {
-        font_index = num_font_sizes - 1;
-    }
-
-    int size = font_sizes[font_index] * draw_scale;
-
-    TTF_SetFontSize(font, size);
-    TTF_GlyphMetrics(font, 'A', NULL, NULL, NULL, NULL, &_char_w);
-    _char_h = TTF_FontHeight(font);
-//    _char_h = size;
-
-    printf("font size set to %d\n", font_sizes[font_index]);
-    printf("- char w: %d\n", _char_w);
-    printf("- char h: %d\n", _char_h);
 }
 
 // TODO: have a key command for this?
@@ -100,23 +60,6 @@ void SetWindowTitle(const char * title)
     SDL_SetWindowTitle(window, title);
 }
 
-void LoadFont(void)
-{
-    font_index = GetFontIndex(_font_size);
-    if ( font_sizes[font_index] != _font_size ) {
-        // TODO: update user config to valid size.
-    }
-
-    font = TTF_OpenFont(_font_path, font_sizes[font_index] * draw_scale);
-    if ( font == NULL ) {
-        fprintf(stderr, "Could not load font: %s\n", SDL_GetError());
-        exit(EXIT_FAILURE);
-    }
-
-    TTF_SetFontHinting(font, TTF_HINTING_MONO);
-    ChangeFontSize(0);
-}
-
 void InitWindow(void)
 {
     u32 window_flags = 0;
@@ -127,9 +70,9 @@ void InitWindow(void)
     window = SDL_CreateWindow("", 128, 128, 640, h, window_flags);
     window_surface = SDL_GetWindowSurface(window);
 
-    draw_scale = window_surface->h / h;
-    printf("render scale: %d\n", draw_scale);
-    _margin = 8 * draw_scale;
+    _draw_scale = window_surface->h / h;
+    printf("render scale: %d\n", _draw_scale);
+    _margin = 8 * _draw_scale;
 }
 
 static void Blit(SDL_Surface * surface, int x, int y)
@@ -149,19 +92,10 @@ void DrawString(int x, int y, Color color, const char * string)
     if ( string == NULL || *string == '\0' ) {
         return;
     }
-    
-    SDL_Color sdl_fg = ColorToSDL(color);
-    //    SDL_Color sdl_bg = GetColor(_bg_color);
-    SDL_Surface * text = TTF_RenderText_Blended(font, string, sdl_fg);
 
-    if ( text ) {
-        Blit(text, x, y);
-    } else {
-#ifdef QE_DEBUG
-        fprintf(stderr, "Could not create text surface: %s\n", SDL_GetError());
-#endif
-        DieGracefully("Error: failed to blit text");
-    }
+    SDL_Surface * text = CreateTextSurface(string, color);
+    Blit(text, x, y);
+    SDL_FreeSurface(text);
 }
 
 void DrawFormat(int x, int y, Color color, const char * format, ...)

@@ -7,12 +7,14 @@
 
 #include "tray.h"
 
+#include "buffer.h"
 #include "color.h"
 #include "config.h"
-#include "buffer.h"
+#include "font.h"
 #include "line.h"
 #include "qe.h"
 #include "window.h"
+
 #include <errno.h>
 #include <string.h>
 
