@@ -9,14 +9,13 @@
 #define font_h
 
 #include <SDL.h>
-#include "color.h"
 
-extern int _char_w;
+extern float _char_w;
 extern int _char_h;
 
 void InitFont(void);
 void LoadFont(void);
 void ChangeFontSize(int incrememnt);
-SDL_Surface * CreateTextSurface(const char * string, Color color);
+SDL_Surface * CreateTextSurface(const char * string, SDL_Color fg, SDL_Color bg);
 
 #endif /* font_h */

@@ -29,30 +29,40 @@ COLOR:      any of the colors defined in the 'COLORS' section of this file.
 
 CONFIG ENTRIES
 
-use_spaces:         (BOOLEAN) Tabs entered are converted into spaces.
-tab_size:           (BOOLEAN) The number of visual spaces tabs appears as.
-line_numbers:       (BOOLEAN) Whether line numbers are shown or not.
-line_highlight:     (BOOLEAN) Whether the current line is highlighted.
+** TODO: note what the default is when entry is not present in any config file.
+
+Format:
+config_name:        (TYPE, default value) Description.
+
+use_spaces:         (BOOLEAN, false) Tabs entered are converted into spaces.
+tab_size:           (BOOLEAN, 4) The number of visual spaces tabs appears as.
+line_numbers:       (BOOLEAN, false) Whether line numbers are shown or not.
+line_highlight:     (BOOLEAN, false) Whether the current line is highlighted.
 
 font:               (TEXT) The path to the .ttf or .ttc font to use.
-font_size:          (INTEGER) The font size in points.
-line_spacing:       (INTEGER) The separation between text lines in pixels.
-column_limit:       (INTEGER) A vertical indicator displayed at the given
+font_size:          (INTEGER, 12) The font size in points.
+line_spacing:       (INTEGER, 0) The separation between text lines in pixels.
+column_limit:       (INTEGER, 0) A vertical indicator displayed at the given
                     number of characters. This can be turned off by giving a
                     value of '0'.
-window_width:       (INTEGER) The width of the window in pixels on launch.
+
+window_width:       (INTEGER, 640) The width of the window in pixels on launch.
                     A value of '0' indicates the window should size exactly to
                     the column limit as specificed by 'column_limit', or to the
-                    default of 640 if column_limit is 0.
-window_height:
-foreground_color:   (COLOR) The text color.
-background_color:   (COLOR) The color of the background behind text.
+                    default if column_limit is 0.
+window_height:      (INTEGER, 480) The height of the window in pixels on launch.
+                    If zero, the default value is used.
+
+foreground_color:   (COLOR, BLACK) The text color.
+background_color:   (COLOR, WHITE) The color of the background behind text.
 line_number_color:  (COLOR) The color of the line numbers.
+keyword_color:      (COLOR, RED) The color for any text defined with
+                    'keyword' (see below).
 
 keyword:            (TEXT) Define a language keyword for syntax highlighting.
                     A config file may have multiple keyword entries.
-case_sensitive      (BOOLEAN) Indicates whether syntax highlighting takes into
-                    account the case of keywords.
+case_sensitive      (BOOLEAN, true) Indicates whether syntax highlighting takes
+                    into account the case of keywords.
 
 ------
 COLORS

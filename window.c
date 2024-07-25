@@ -75,30 +75,29 @@ void InitWindow(void)
     _margin = 8 * _draw_scale;
 }
 
-static void Blit(SDL_Surface * surface, int x, int y)
-{
-    SDL_Rect dst = { x, y, surface->w, surface->h };
-    SDL_BlitSurface(surface, NULL, window_surface, &dst);
-}
-
 void FillRect(SDL_Rect rect, SDL_Color color)
 {
     u32 color32 = SDL_MapRGB(window_surface->format, color.r, color.g, color.b);
     SDL_FillRect(window_surface, &rect, color32);
 }
 
-void DrawString(int x, int y, Color color, const char * string)
+int DrawString(int x, int y, SDL_Color fg, SDL_Color bg, const char * string)
 {
     if ( string == NULL || *string == '\0' ) {
-        return;
+        return 0;
     }
 
-    SDL_Surface * text = CreateTextSurface(string, color);
-    Blit(text, x, y);
+    SDL_Surface * text = CreateTextSurface(string, fg, bg);
+
+    SDL_Rect dst = { x, y, text->w, text->h };
+    SDL_UpperBlitScaled(text, NULL, window_surface, &dst);
+    int width = text->w;
     SDL_FreeSurface(text);
+
+    return width;
 }
 
-void DrawFormat(int x, int y, Color color, const char * format, ...)
+int DrawFormat(int x, int y, SDL_Color fg, SDL_Color bg, const char * format, ...)
 {
     static char * buffer = NULL; // N.B. let OS free on program end.
     static size_t allocated = 0;
@@ -124,5 +123,5 @@ void DrawFormat(int x, int y, Color color, const char * format, ...)
     va_end(print_args);
     buffer[len] = '\0';
 
-    DrawString(x, y, color, buffer);
+    return DrawString(x, y, fg, bg, buffer);
 }

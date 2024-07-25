@@ -3,6 +3,21 @@ jump to prev/next char?
 Log stdin/stderr to log.txt in application directory.
 'Detach'(?) when running in terminal.
 Undo/redo
+config: font antialiasing boolean
+config: --no-detach
+Do smooth scrolling the Right way
 
 BUGS:
-Font not rendering clearly, again.
+Cursor disappears at end of doc
+Cursor disappears on empty lines
+Line highlight doesn't extend onto line numbers
+
+NOTES:
+TTF_GetFontHinting -> confirm user font is mono
+TTF_SetFontHinting -> choose monopsace, if availabile(?)
+
+For MacOS testing:
+/Users/tomf/Library/Fonts/Iosevka-Regular.ttc
+
+Blended is much slower than Shaded: use shaded, since the background box is fine
+Better: use LCD (subpixel)

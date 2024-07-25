@@ -19,7 +19,9 @@ typedef struct {
 
 typedef struct line {
     char * chars; // allocated size is always length + 1
-    Color * char_colors; // TODO: syntax highlighting
+    Token * tokens;
+    int num_tokens;
+    int allocated_tokens;
     int len;
     struct line * prev;
     struct line * next;
@@ -30,6 +32,7 @@ void InsertChars(Line * line, char * string, int len, int x);
 void RemoveChars(Line * line, int count, int x);
 void JumpToEndOfWord(Line * line, int * cx);
 void JumpToBeginningOfWord(Line * line, int * cx);
+void UpdateLineColor(Line * line);
 
 // TODO: DrawLine(const Line * line, int line_num, bool highlighted)
 

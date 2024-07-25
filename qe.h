@@ -46,6 +46,7 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define CLAMP(val, min, max) (val < min ? min : val > max : max : val)
+#define ROUND(fl) (int)((fl) + 0.5f)
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -54,7 +55,6 @@ typedef uint32_t u32;
 typedef enum { UP, DOWN, LEFT, RIGHT } Direction;
 
 void LoadDocument(const char * path, bool create, int line_number);
-int CaseCompare(const char * a, const char * b);
 void DieGracefully(const char * message, ...);
 void Scroll(size_t new_line_num);
 int ProgramLoop(void);

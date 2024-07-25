@@ -147,6 +147,7 @@ Line * GetLine(Buffer * buffer, int number)
     return NULL;
 }
 
+// TODO: remove
 int LineNumCols(Buffer * buffer)
 {
     if ( buffer->num_lines == 0 ) {

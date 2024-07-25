@@ -8,6 +8,9 @@
 #ifndef config_h
 #define config_h
 
+#define MAX_KEYWORDS 256
+#define MAX_KEYWORD_LEN 64
+
 #include "qe.h"
 #include "color.h"
 #include <stdbool.h>
@@ -24,10 +27,15 @@ extern int  _line_spacing;
 extern int  _col_limit;
 extern int  _win_w;
 extern int  _win_h;
-extern Color _fg_color;
+extern Color _primary_color;
+extern Color _secondary_color;
 extern Color _bg_color;
-extern Color _line_number_color;
+extern Color _keyword_color;
+
+extern int num_keywords;
+extern char keywords[MAX_KEYWORDS][MAX_KEYWORD_LEN];
 
 void LoadConfig(const char * file_name);
+bool IsKeyword(const char * word);
 
 #endif /* config_h */

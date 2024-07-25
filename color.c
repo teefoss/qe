@@ -15,7 +15,7 @@ typedef struct {
 #define PALETTE_ENTRY(val, e) [e] = { .value = val, .name = #e }
 
 static const PaletteColor palette[] = {
-    PALETTE_ENTRY( 0x000000, BLACK ),
+    PALETTE_ENTRY( 0x0F0F0F, BLACK ),
     PALETTE_ENTRY( 0xFFFFFF, WHITE ),
     PALETTE_ENTRY( 0x404040, DARK_GRAY ),
     PALETTE_ENTRY( 0x808080, GRAY ),
@@ -30,7 +30,7 @@ static const PaletteColor palette[] = {
     PALETTE_ENTRY( 0x00C0C0, CYAN ),
     PALETTE_ENTRY( 0x80FFFF, LIGHT_CYAN ),
     PALETTE_ENTRY( 0x800000, DARK_RED ),
-    PALETTE_ENTRY( 0xFF0080, RED ),
+    PALETTE_ENTRY( 0xFE0808, RED ), // FF0080
     PALETTE_ENTRY( 0xFF80C0, LIGHT_RED ),
     PALETTE_ENTRY( 0x800080, DARK_PURPLE ),
     PALETTE_ENTRY( 0x8000FF, PURPLE ),
@@ -54,7 +54,7 @@ Color ColorFromName(const char * name)
     int num_colors = ARR_SIZE(palette);
 
     for ( Color i = 0; i < num_colors; i++ ) {
-        if ( CaseCompare(name, palette[i].name) == 0 ) {
+        if ( SDL_strcasecmp(name, palette[i].name) == 0 ) {
             return i;
         }
     }
@@ -85,11 +85,24 @@ static int AdjustComponent(Color color, int component_mask, int amount)
  */
 SDL_Color AdjustTone(Color color, int amount)
 {
-    ASSERT(amount > 0);
+    SDL_Color sdl = ColorToSDL(color);
+    int luminance = 0.2126 * sdl.r + 0.7152 * sdl.g + 0.0722 * sdl.b;
 
-    int r = AdjustComponent(color, R_MASK, amount);
-    int g = AdjustComponent(color, G_MASK, amount);
-    int b = AdjustComponent(color, B_MASK, amount);
+    if ( luminance < 128 ) { // Lighten
+        sdl.r = MIN(255, sdl.r + amount);
+        sdl.g = MIN(255, sdl.g + amount);
+        sdl.b = MIN(255, sdl.b + amount);
+    } else { // Darken
+        sdl.r = MAX(0, sdl.r - amount);
+        sdl.g = MAX(0, sdl.g - amount);
+        sdl.b = MAX(0, sdl.b - amount);
+    }
 
-    return (SDL_Color){ r, g, b, 255 };
+//    ASSERT(amount > 0);
+//
+//    int r = AdjustComponent(color, R_MASK, amount);
+//    int g = AdjustComponent(color, G_MASK, amount);
+//    int b = AdjustComponent(color, B_MASK, amount);
+//
+    return sdl;
 }

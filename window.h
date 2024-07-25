@@ -23,8 +23,8 @@ void WindowDidResize(void);
 void SetWindowWidthToFit(int num_line_cols);
 void SetWindowTitle(const char * title);
 void FillRect(SDL_Rect rect, SDL_Color color);
-void DrawString(int x, int y, Color color, const char * string);
-void DrawFormat(int x, int y, Color color, const char * format, ...);
+int DrawString(int x, int y, SDL_Color fg, SDL_Color bg, const char * string);
+int DrawFormat(int x, int y, SDL_Color fg, SDL_Color bg, const char * format, ...);
 void ChangeFontSize(int incrememnt);
 int Margin(void);
 

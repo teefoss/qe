@@ -158,11 +158,15 @@ void DrawTray(bool cursor_blink)
         case TRAY_LINE_NUM: title = "Line number"; break;
         default: break;
     }
-    Color gray = ColorFromName("gray");
-    DrawString(_margin, bottom - y_offset, gray, title);
+
+    DrawString(_margin, bottom - y_offset, ColorToSDL(GRAY), ColorToSDL(_bg_color), title);
 
     // buffer
-    DrawString(_margin, bottom - (_margin + _char_h), _fg_color, buffer.chars);
+    DrawString(_margin, 
+               bottom - (_margin + _char_h),
+               ColorToSDL(_primary_color),
+               ColorToSDL(_bg_color),
+               buffer.chars);
 
     if ( cursor_blink ) {
         SDL_Rect cursor_rect = {
@@ -171,6 +175,6 @@ void DrawTray(bool cursor_blink)
             .w = _char_w,
             .h = _char_h
         };
-        FillRect(cursor_rect, ColorToSDL(_fg_color));
+        FillRect(cursor_rect, ColorToSDL(_primary_color));
     }
 }

@@ -14,9 +14,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_KEYWORDS 256
-#define MAX_KEYWORD_LEN 64
-
 typedef enum {
     NO_OPT = -1,
     USE_SPACES,
@@ -30,9 +27,10 @@ typedef enum {
     COLUMN_LIMIT,
     WINDOW_WIDTH,
     WINDOW_HEIGHT,
-    FOREGROUND_COLOR,
+    PRIMARY_COLOR,
+    SECONDARY_COLOR,
+    KEYWORD_COLOR,
     BACKGROUND_COLOR,
-    LINE_NUMBER_COLOR,
 
     NUM_OPTIONS
 } OptionID;
@@ -89,9 +87,10 @@ const Options global_options = {
         { .id = COLUMN_LIMIT, .int_value = 0 },
         { .id = WINDOW_WIDTH, .int_value = 640 },
         { .id = WINDOW_HEIGHT, .int_value = 480 },
-        { .id = FOREGROUND_COLOR, .color_value = BLACK },
+        { .id = PRIMARY_COLOR, .color_value = BLACK },
+        { .id = SECONDARY_COLOR, .color_value = BLUE },
+        { .id = KEYWORD_COLOR, .color_value = RED },
         { .id = BACKGROUND_COLOR, .color_value = WHITE },
-        { .id = LINE_NUMBER_COLOR, .color_value = GRAY },
     },
     .keywords = { NULL }
 };
@@ -125,35 +124,49 @@ int _line_spacing = 0;
 int _col_limit = 80;
 int _win_w = 0;
 int _win_h = 0;
-Color _fg_color = BLACK;
+Color _primary_color = BLACK;
+Color _secondary_color = BLUE;
+Color _keyword_color = RED;
 Color _bg_color = WHITE;
-Color _line_number_color = GRAY;
 
 // Keywords that were loaded from config
 int num_keywords;
-static char keywords[MAX_KEYWORDS][64];
+char keywords[MAX_KEYWORDS][64];
 
 //
 // Specify options' types and map them to their global variable.
 //
 #define ENTRY(e, type, loc) [e] = { #e, type, loc }
 static OptionMapping opt_map[] = {
-    ENTRY( USE_SPACES,         BOOLEAN,    &_use_spaces ),
-    ENTRY( CASE_SENSITIVE,     BOOLEAN,    &_case_sensitive ),
-    ENTRY( LINE_NUMBERS,       BOOLEAN,    &_line_numbers ),
-    ENTRY( LINE_HIGHLIGHT,     BOOLEAN,    &_highlight_line ),
-    ENTRY( FONT,               STRING,     _font_path ),
-    ENTRY( TAB_SIZE,           INTEGER,    &_tab_size ),
-    ENTRY( FONT_SIZE,          INTEGER,    &_font_size ),
-    ENTRY( LINE_SPACING,       INTEGER,    &_line_spacing ),
-    ENTRY( COLUMN_LIMIT,       INTEGER,    &_col_limit ),
-    ENTRY( WINDOW_WIDTH,       INTEGER,    &_win_w ),
-    ENTRY( WINDOW_HEIGHT,      INTEGER,    &_win_h ),
-    ENTRY( FOREGROUND_COLOR,   COLOR,      &_fg_color ),
-    ENTRY( BACKGROUND_COLOR,   COLOR,      &_bg_color ),
-    ENTRY( LINE_NUMBER_COLOR,  COLOR,      &_line_number_color ),
+    ENTRY( USE_SPACES,          BOOLEAN,    &_use_spaces ),
+    ENTRY( CASE_SENSITIVE,      BOOLEAN,    &_case_sensitive ),
+    ENTRY( LINE_NUMBERS,        BOOLEAN,    &_line_numbers ),
+    ENTRY( LINE_HIGHLIGHT,      BOOLEAN,    &_highlight_line ),
+    ENTRY( FONT,                STRING,     _font_path ),
+    ENTRY( TAB_SIZE,            INTEGER,    &_tab_size ),
+    ENTRY( FONT_SIZE,           INTEGER,    &_font_size ),
+    ENTRY( LINE_SPACING,        INTEGER,    &_line_spacing ),
+    ENTRY( COLUMN_LIMIT,        INTEGER,    &_col_limit ),
+    ENTRY( WINDOW_WIDTH,        INTEGER,    &_win_w ),
+    ENTRY( WINDOW_HEIGHT,       INTEGER,    &_win_h ),
+    ENTRY( PRIMARY_COLOR,       COLOR,      &_primary_color ),
+    ENTRY( SECONDARY_COLOR,     COLOR,      &_secondary_color ),
+    ENTRY( KEYWORD_COLOR,       COLOR,      &_keyword_color ),
+    ENTRY( BACKGROUND_COLOR,    COLOR,      &_bg_color ),
 };
 #undef ENTRY
+
+bool IsKeyword(const char * word)
+{
+    for ( int i = 0; i < num_keywords; i++ ) {
+        if ( (_case_sensitive && SDL_strcmp(word, keywords[i]) == 0)
+            || (!_case_sensitive && SDL_strcasecmp(word, keywords[i]))) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 static char * GetOrCreateApplicationDirectory(void)
 {
@@ -328,20 +341,17 @@ static void ParseConfig(const char * file_name)
             goto syntax_error;
         }
 
-        ChangeCase(config_name, toupper); // case insensitive
-
-        num_keywords = 0;
-        if ( type == STRING && CaseCompare(config_name, "KEYWORD") ) {
+        if ( type == STRING && SDL_strcasecmp(config_name, "KEYWORD") == 0 ) {
             size_t len = strlen(str_param);
             if ( len > 79 ) {
                 len = 79;
             }
-            memcpy(keywords[num_keywords++], str_param, len);
+            memcpy(&keywords[num_keywords++][0], str_param, len);
             continue;
         }
 
         for ( int i = 0; i < NUM_OPTIONS; i++ ) {
-            if ( CaseCompare(config_name, opt_map[i].name) == 0 ) {
+            if ( SDL_strcasecmp(config_name, opt_map[i].name) == 0 ) {
                 switch ( type ) {
                     case COLOR:
                         *(Color *)opt_map[i].value = int_param;
@@ -386,6 +396,8 @@ void LoadConfig(const char * file_name)
         CreateConfigFile("global", &global_options);
         CreateConfigFile("c", &c_options);
     }
+
+    num_keywords = 0;
 
     ParseConfig("global");
 

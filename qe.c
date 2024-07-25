@@ -34,16 +34,6 @@ static int next_blink_time;
 
 static bool needs_refresh;
 
-int CaseCompare(const char * a, const char * b)
-{
-    while (*a && (tolower(*a) == tolower(*b)) ) {
-        a++;
-        b++;
-    }
-
-    return tolower(*a) - tolower(*b);
-}
-
 void DieGracefully(const char * message, ...)
 {
     // TODO: the gracefully part
@@ -55,10 +45,22 @@ void DieGracefully(const char * message, ...)
     exit(EXIT_FAILURE);
 }
 
+int GetNumberOfDigits(size_t number)
+{
+    int num_digits = 0;
+    while ( number != 0 ) {
+        number /= 10;
+        num_digits++;
+    }
+
+    return num_digits;
+}
+
 static void Redraw(void)
 {
-    int line_num_cols = LineNumCols(&buffer);
-    int text_x = (line_num_cols + 1) * _char_w + _margin;
+    int line_num_digits = GetNumberOfDigits(buffer.num_lines);
+    int line_numbers_width = ROUND((line_num_digits + 2) * _char_w);
+    int text_x = line_numbers_width; // Text starts right after line numbers.
 
     int window_w = WindowWidth();
     int window_h = WindowHeight();
@@ -74,7 +76,7 @@ static void Redraw(void)
     FillRect(main_area, ColorToSDL(_bg_color));
 
     if ( _col_limit != 0 ) {
-        int text_w = _col_limit * _char_w;
+        int text_w = ROUND(_col_limit * _char_w);
         // Side Area
         SDL_Rect side_area = {
             .x = text_x + text_w,
@@ -101,10 +103,11 @@ static void Redraw(void)
     Line * line;
     int line_num = top_line_num;
     float partial_line_y = top_line_num_f - floorf(top_line_num_f);
+    int line_height = _char_h + _line_spacing;
 
     for ( line = GetLine(&buffer, (int)top_line_num_f);
           line != NULL && y < window_h;
-          line = line->next, row++, y += _char_h + _line_spacing, line_num++ )
+          line = line->next, row++, y += line_height, line_num++ )
     {
         int draw_y = (float)y - partial_line_y * (float)_char_h;
         int line_num2 = line_num;
@@ -112,25 +115,70 @@ static void Redraw(void)
             line_num2--;
         }
 
-        DrawFormat(_margin,
-                   draw_y,
-                   _line_number_color,
-                   "%*d", line_num_cols, line_num2 + 1);
+        //
+        // Line hightlight box
+        //
 
-        DrawString(text_x, draw_y, _fg_color, line->chars);
+        SDL_Color line_bg_color = ColorToSDL(_bg_color);
+        if ( _highlight_line && line_num == cy ) {
+            SDL_Rect highlight_rect = {
+                .x = 0,
+                .y = draw_y,
+                .w = window_w,
+                .h = line_height
+            };
+            line_bg_color = AdjustTone(_bg_color, 16);
+            FillRect(highlight_rect, line_bg_color);
+        }
+
+        //
+        // Line numbers
+        //
+
+        SDL_Color line_number_color = AdjustTone(_primary_color, 128);
+        DrawFormat(0, draw_y,
+                   line_number_color,
+                   ColorToSDL(_bg_color),
+                   " %*d ", line_num_digits, line_num2 + 1);
+
+        //
+        // Line
+        //
+
+//        DrawString(text_x, draw_y, ColorToSDL(_primary_color), line->chars);
+
+        UpdateLineColor(line);
+        for ( int i = 0; i < line->num_tokens; i++ ) {
+            Token t = line->tokens[i];
+            char * word = calloc(t.len + 1, 1); // TODO: wut... no
+            strncpy(word, line->chars + t.start, t.len);
+            DrawString(text_x + ROUND(t.start * _char_w),
+                       draw_y,
+                       ColorToSDL(t.color),
+                       line_bg_color,
+                       word);
+            free(word);
+        }
+
+        //
+        // Cursor
+        //
 
         if ( line_num == cy ) {
             SDL_Rect cursor_rect = {
-                .x = text_x + cx * _char_w,
+                .x = text_x + ROUND(cx * _char_w),
                 .y = draw_y,
-                .w = _char_w,
+                .w = _char_w, // TODO: round this?
                 .h = _char_h
             };
 
             if ( cursor_blink && !TrayIsOpen() ) {
-                FillRect(cursor_rect, ColorToSDL(_fg_color));
+//                FillRect(cursor_rect, ColorToSDL(_secondary_color));
                 char cursor_ch[2] = { line->chars[cx], '\0' };
-                DrawString(cursor_rect.x, cursor_rect.y, _bg_color, cursor_ch);
+                DrawString(cursor_rect.x, cursor_rect.y, 
+                           ColorToSDL(_bg_color),
+                           ColorToSDL(_secondary_color),
+                           cursor_ch);
             }
         }
     }
