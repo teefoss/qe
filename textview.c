@@ -352,9 +352,9 @@ void DrawTextView(TextView * view, SDL_Rect rect, bool show_cursor)
     const int top_visible_line = view->offset_y / (float)_char_h;
     const int num_lines = rect.h / _char_h + 1;
     const int num_line_num_digits = GetNumberOfDigits(view->buffer.num_lines + 1);
-    const SDL_Color bg = ColorToSDL(_bg_color);
+    const SDL_Color bg = _bg_color;
 
-    FillRect(rect, ColorToSDL(_bg_color));
+    FillRect(rect, _bg_color);
 
     for ( int line_num = top_visible_line < 0 ? 0 : top_visible_line;
           line_num < top_visible_line + num_lines;
@@ -376,15 +376,13 @@ void DrawTextView(TextView * view, SDL_Rect rect, bool show_cursor)
         
 //        if ( 1 ) {
         if ( num_keywords == 0 ) {
-            DrawString(x, y, ColorToSDL(_primary_color), bg, line->chars);
+            DrawString(x, y, _primary_color, bg, line->chars);
         } else {
             UpdateTokens(line);
             for ( int i = 0; i < line->num_tokens; i++ ) {
                 const Token * token = &line->tokens[i];
 
-                SDL_Color fg = ColorToSDL(token->is_keyword
-                                          ? _secondary_color
-                                          : _primary_color);
+                SDL_Color fg = token->is_keyword ? _secondary_color : _primary_color;
 
                 const char * token_string = GetTokenString(token);
                 int token_x = x + (int)(token->start - line->chars) * _char_w;

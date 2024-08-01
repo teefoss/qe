@@ -23,6 +23,9 @@ static const int font_sizes[] = {
 static TTF_Font * font;
 static int font_index; // index into `font_size`, current font size.
 
+#define TEST_BUF_SIZE 100
+static char test_buf[TEST_BUF_SIZE + 1];
+
 static int GetFontIndex(int size)
 {
     for ( int i = 0; i < num_font_sizes; i++ ) {
@@ -40,6 +43,8 @@ void InitFont(void)
         fprintf(stderr, "TTF_Init failed: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
+
+    memset(test_buf, 'A', TEST_BUF_SIZE);
 }
 
 void ChangeFontSize(int incrememnt)
@@ -70,16 +75,12 @@ void ChangeFontSize(int incrememnt)
 #endif
 
     // Calculate floating point advance
-    #define TEST_BUF_SIZE 100
-    char buf[TEST_BUF_SIZE + 1];
-    memset(buf, 'A', TEST_BUF_SIZE);
-    buf[TEST_BUF_SIZE] = '\0';
 
-    SDL_Surface * surface = CreateTextSurface(buf, (SDL_Color){0}, (SDL_Color){0});
+    SDL_Color black = { 0 };
+    SDL_Surface * surface = CreateTextSurface(test_buf, black, black);
     _char_w = (float)surface->w / TEST_BUF_SIZE;
     printf("char w: %f\n", _char_w);
     SDL_FreeSurface(surface);
-    #undef TEST_BUF_SIZE
 }
 
 void LoadFont(void)

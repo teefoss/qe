@@ -18,7 +18,9 @@ TTF_GetFontHinting -> confirm user font is mono
 TTF_SetFontHinting -> choose monopsace, if availabile(?)
 
 For MacOS testing:
-/Users/tomf/Library/Fonts/Iosevka-Regular.ttc
+;font                /Users/tomf/Library/Fonts/Iosevka-Regular.ttc
+;font                /System/Library/Fonts/Monaco.ttf
+;font                /Library/Fonts/SF-Mono-Regular.otf
 
 Blended is much slower than Shaded: use shaded, since the background box is fine
 Better: use LCD? (subpixel)

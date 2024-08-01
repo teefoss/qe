@@ -134,7 +134,7 @@ void UpdateTokens(Line * line)
                 end++;
             }
 
-            AddToken(line, str, end - str, _primary_color);
+            AddToken(line, str, end - str, false);
             str = end;
         }
     }

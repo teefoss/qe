@@ -122,3 +122,26 @@ int DrawFormat(int x, int y, SDL_Color fg, SDL_Color bg, const char * format, ..
 
     return DrawString(x, y, fg, bg, buffer);
 }
+
+/**
+ *  Darken light colors or lighten dark colors by a given amount.
+ *  - parameter color: The color to adjust.
+ *  - parameter amount: A positive value by which to lighten or darken `color`.
+ */
+SDL_Color AdjustTone(SDL_Color color, int amount)
+{
+    int luminance = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+
+    SDL_Color adjusted;
+    if ( luminance < 128 ) { // Lighten
+        adjusted.r = MIN(255, color.r + amount);
+        adjusted.g = MIN(255, color.g + amount);
+        adjusted.b = MIN(255, color.b + amount);
+    } else { // Darken
+        adjusted.r = MAX(0, color.r - amount);
+        adjusted.g = MAX(0, color.g - amount);
+        adjusted.b = MAX(0, color.b - amount);
+    }
+
+    return color;
+}

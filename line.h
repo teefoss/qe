@@ -9,7 +9,6 @@
 #define line_h
 
 #include "qe.h"
-#include "color.h"
 
 typedef struct {
     char * start;

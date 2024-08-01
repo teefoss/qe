@@ -7,7 +7,6 @@
 
 #include "tray.h"
 
-#include "color.h"
 #include "config.h"
 #include "font.h"
 #include "line.h"
@@ -138,7 +137,7 @@ void DrawTray(bool cursor_blink)
         .w = window_w,
         .h = bottom
     };
-    FillRect(tray_rect, ColorToSDL(_bg_color));
+    FillRect(tray_rect, _bg_color);
 
     // separator
 
@@ -159,13 +158,14 @@ void DrawTray(bool cursor_blink)
         default: break;
     }
 
-    DrawString(_margin, bottom - y_offset, ColorToSDL(GRAY), ColorToSDL(_bg_color), title);
+    // TODO: title color is adjusted primary?
+    DrawString(_margin, bottom - y_offset, (SDL_Color){128, 128, 128}, _bg_color, title);
 
     // buffer
-    DrawString(_margin, 
+    DrawString(_margin,
                bottom - (_margin + _char_h),
-               ColorToSDL(_primary_color),
-               ColorToSDL(_bg_color),
+               _primary_color,
+               _bg_color,
                buffer.chars);
 
     if ( cursor_blink ) {
@@ -175,6 +175,6 @@ void DrawTray(bool cursor_blink)
             .w = _char_w,
             .h = _char_h
         };
-        FillRect(cursor_rect, ColorToSDL(_primary_color));
+        FillRect(cursor_rect, _primary_color);
     }
 }

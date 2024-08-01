@@ -6,7 +6,6 @@
 //
 
 #include "config.h"
-#include "color.h"
 #include "plat.h"
 #include "misc.h"
 
@@ -14,6 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#define R_MASK 0xFF0000
+#define G_MASK 0x00FF00
+#define B_MASK 0x0000FF
 
 typedef enum {
     NO_OPT = -1,
@@ -56,7 +59,7 @@ typedef struct {
         bool bool_value;
         int int_value;
         char * string_value;
-        Color color_value;
+        SDL_Color color_value;
     };
 } Option;
 
@@ -88,10 +91,10 @@ const Options global_options = {
         { .id = COLUMN_LIMIT, .int_value = 0 },
         { .id = WINDOW_WIDTH, .int_value = 640 },
         { .id = WINDOW_HEIGHT, .int_value = 480 },
-        { .id = PRIMARY_COLOR, .color_value = BLACK },
-        { .id = SECONDARY_COLOR, .color_value = BLUE },
-        { .id = KEYWORD_COLOR, .color_value = RED },
-        { .id = BACKGROUND_COLOR, .color_value = WHITE },
+        { .id = PRIMARY_COLOR, .color_value = { 0x00, 0x00, 0x00 } },
+        { .id = SECONDARY_COLOR, .color_value = { 0x08, 0x80, 0xFE } },
+        { .id = KEYWORD_COLOR, .color_value = { 0xFE, 0x08, 0x08 } },
+        { .id = BACKGROUND_COLOR, .color_value = { 0xFF, 0xFF, 0xFF } },
     },
     .keywords = { NULL }
 };
@@ -125,10 +128,10 @@ int _line_spacing = 0;
 int _col_limit = 80;
 int _win_w = 0;
 int _win_h = 0;
-Color _primary_color = BLACK;
-Color _secondary_color = BLUE;
-Color _keyword_color = RED;
-Color _bg_color = WHITE;
+SDL_Color _primary_color = { 0x00, 0x00, 0x00 };
+SDL_Color _secondary_color = { 0x08, 0x80, 0xFE };
+SDL_Color _keyword_color = { 0xFE, 0x08, 0x08 };
+SDL_Color _bg_color = { 0xFF, 0xFF, 0xFF };
 
 // Keywords that were loaded from config
 int num_keywords;
@@ -236,9 +239,14 @@ void WriteConfig(const Options * options, const char * path)
             case BOOLEAN:
                 fprintf(file, "%s\n", opt->bool_value ? "yes" : "no" );
                 break;
-            case COLOR:
-                fprintf(file, "%s\n", ColorName(opt->color_value));
+            case COLOR: {
+                int hex = 0;
+                hex |= opt->color_value.r << 16;
+                hex |= opt->color_value.g << 8;
+                hex |= opt->color_value.b;
+                fprintf(file, "#%06X\n", hex);
                 break;
+            }
             default:
                 fprintf(stderr,
                         "%s: programmer effed up (weird format for option '%s')\n",
@@ -324,11 +332,10 @@ static void ParseConfig(const char * file_name)
 
         if ( sscanf(line, "%s %i\n", config_name, &int_param) == 2 ) {
             type = INTEGER;
+        } else if ( sscanf(line, "%s #%X\n", config_name, &int_param) == 2 ) {
+            type = COLOR;
         } else if ( sscanf(line, "%s %s\n", config_name, str_param) == 2 ) {
-            int_param = ColorFromName(str_param);
-            if ( int_param != INVALID_COLOR ) {
-                type = COLOR;
-            } else if ( STREQ(str_param, "yes") ) {
+            if ( STREQ(str_param, "yes") ) {
                 type = BOOLEAN;
                 int_param = 1;
             } else if ( STREQ(str_param, "no" ) ) {
@@ -355,9 +362,14 @@ static void ParseConfig(const char * file_name)
         for ( int i = 0; i < NUM_OPTIONS; i++ ) {
             if ( SDL_strcasecmp(config_name, opt_map[i].name) == 0 ) {
                 switch ( type ) {
-                    case COLOR:
-                        *(Color *)opt_map[i].value = int_param;
+                    case COLOR: {
+                        SDL_Color color;
+                        color.r = (int_param & 0xFF0000) >> 16;
+                        color.g = (int_param & 0x00FF00) >> 8;
+                        color.b = (int_param & 0x0000FF);
+                        *(SDL_Color *)opt_map[i].value = color;
                         break;
+                    }
                     case BOOLEAN:
                         *(bool *)opt_map[i].value = int_param;
                         break;

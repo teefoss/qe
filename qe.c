@@ -420,7 +420,7 @@ int ProgramLoop(void)
     bool quit_requested = false;
     RestartCursor();
 
-    FillRect((SDL_Rect){0, 0, WindowWidth(), WindowHeight()}, ColorToSDL(_bg_color));
+    FillRect((SDL_Rect){0, 0, WindowWidth(), WindowHeight()}, _bg_color);
     doc_buf_rect = DocumentBufferRect();
     DrawTextView(&document_view, doc_buf_rect, false);
 
@@ -508,7 +508,7 @@ int ProgramLoop(void)
         }
 
         if ( needs_refresh ) {
-            FillRect((SDL_Rect){0, 0, WindowWidth(), WindowHeight()}, ColorToSDL(_bg_color));
+            FillRect((SDL_Rect){0, 0, WindowWidth(), WindowHeight()}, _bg_color);
             DrawTextView(&document_view, doc_buf_rect, cursor_blink);
         } else {
             SDL_Delay(20);
