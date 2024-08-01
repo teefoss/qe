@@ -1,5 +1,7 @@
 #include "plat.h"
+
 #include "qe.h"
+#include "misc.h"
 
 #include <sys/stat.h>
 #include <errno.h>

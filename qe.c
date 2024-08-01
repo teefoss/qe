@@ -7,7 +7,7 @@
 
 #include "qe.h"
 
-#include "buffer.h"
+#include "textview.h"
 #include "config.h"
 #include "font.h"
 #include "tray.h"
@@ -22,43 +22,45 @@
 static const u8 * keys;
 static SDL_Keymod mods;
 
-static Buffer buffer;
+static TextView document_view = {
+    .actions = {
+        [BUF_MOVE_LEFT] = true,
+        [BUF_MOVE_UP] = true,
+        [BUF_MOVE_DOWN] = true,
+        [BUF_MOVE_RIGHT] = true,
+        [BUF_PAGE_UP] = true,
+        [BUF_PAGE_DOWN] = true,
+        [BUF_INSERT_LINE] = true,
+        [BUF_BACKSPACE] = true,
+        [BUF_MOVE_TO_TOP] = true,
+        [BUF_MOVE_TO_BOTTOM] = true,
+    }
+};
 static const char * document_path;
 
-static float top_line_num_f;
-static int top_line_num; // The line visible at the top
+SDL_Rect doc_buf_rect;
 
-static int cx, cy; // Cursor position
+//static float top_line_num_f;
+//static int top_line_num; // The line visible at the top
+
+//static int cx, cy; // Cursor position
 static bool cursor_blink = true;
 static int next_blink_time;
 
 static bool needs_refresh;
 
-void DieGracefully(const char * message, ...)
+SDL_Rect DocumentBufferRect(void)
 {
-    // TODO: the gracefully part
-    
-    va_list args;
-    va_start(args, message);
-    vfprintf(stderr, message, args);
-    fprintf(stderr, "\n");
-    exit(EXIT_FAILURE);
+    return (SDL_Rect){ _margin, 0, WindowWidth(), WindowHeight() };
 }
 
-int GetNumberOfDigits(size_t number)
+#if 0
+static void Redraw(const Buffer * buffer)
 {
-    int num_digits = 0;
-    while ( number != 0 ) {
-        number /= 10;
-        num_digits++;
-    }
+    const int cx = buffer->cx;
+    const int cy = buffer->cy;
 
-    return num_digits;
-}
-
-static void Redraw(void)
-{
-    int line_num_digits = GetNumberOfDigits(buffer.num_lines);
+    int line_num_digits = GetNumberOfDigits(document_buffer.num_lines);
     int line_numbers_width = ROUND((line_num_digits + 2) * _char_w);
     int text_x = line_numbers_width; // Text starts right after line numbers.
 
@@ -105,7 +107,7 @@ static void Redraw(void)
     float partial_line_y = top_line_num_f - floorf(top_line_num_f);
     int line_height = _char_h + _line_spacing;
 
-    for ( line = GetLine(&buffer, (int)top_line_num_f);
+    for ( line = GetLine(&document_buffer, (int)top_line_num_f);
           line != NULL && y < window_h;
           line = line->next, row++, y += line_height, line_num++ )
     {
@@ -189,10 +191,11 @@ static void Redraw(void)
 
     UpdateWindow();
 }
+#endif
 
 void LoadDocument(const char * path, bool create, int line_number)
 {
-    FreeBuffer(&buffer);
+    FreeBuffer(&document_view.buffer);
     document_path = path;
 
     FILE * file = fopen(document_path, "r");
@@ -203,14 +206,14 @@ void LoadDocument(const char * path, bool create, int line_number)
                 printf("error: failed to create '%s'", document_path);
                 exit(EXIT_FAILURE);
             }
-            AppendLine(&buffer, NewLine());
+            AppendLine(&document_view.buffer, NewLine());
         } else {
             printf("error: Could not open '%s'. Does it exist?\n",
                    document_path);
             exit(EXIT_FAILURE);
         }
     } else {
-        LoadBuffer(&buffer, file);
+        LoadBuffer(&document_view.buffer, file);
     }
 
     fclose(file);
@@ -226,28 +229,30 @@ void LoadDocument(const char * path, bool create, int line_number)
     }
 
     SetWindowTitle(display_name);
-    Redraw();
+    DrawTextView(&document_view, doc_buf_rect, false);
 }
 
 /**
  *  Scroll editor to `new_line_num` (zero-indexed).
  */
-void Scroll(size_t new_line_num)
+#if 0
+void Scroll(Buffer * buffer, size_t line_num)
 {
-    if ( new_line_num < 0 ) {
-        new_line_num = 0;
-    } else if ( new_line_num >= buffer.num_lines ) {
-        new_line_num = buffer.num_lines - 1;
+    if ( line_num < 0 ) {
+        line_num = 0;
+    } else if ( line_num >= document_buffer.num_lines ) {
+        line_num = document_buffer.num_lines - 1;
     }
 
-    cy = (int)new_line_num;
-    top_line_num = cy - WindowHeight() / _char_h / 2; // TODO: editor region
+    buffer->cy = (int)line_num;
+    top_line_num = buffer->cy - WindowHeight() / _char_h / 2; // TODO: editor region
 
     if ( top_line_num < 0 ) {
         top_line_num = 0;
     }
 //    Redraw();
 }
+#endif
 
 int EventWatch(void * user_data, SDL_Event * event)
 {
@@ -255,159 +260,44 @@ int EventWatch(void * user_data, SDL_Event * event)
         && event->window.event == SDL_WINDOWEVENT_EXPOSED )
     {
         WindowDidResize();
-        Redraw();
+        doc_buf_rect = DocumentBufferRect();
+        DrawTextView(&document_view, doc_buf_rect, false);
     }
 
     return 1;
 }
 
-static void RestartCursor(void)
+void RestartCursor(void)
 {
     next_blink_time = SDL_GetTicks() + BLINK_MS;
     cursor_blink = true;
     needs_refresh = true;
 }
 
-static void MoveCursor(Direction direction)
+// TODO: move to textview.c
+static void Backspace(TextView * view)
 {
-    Line * current = GetLine(&buffer, cy);
-
-    switch ( direction ) {
-        case UP:
-            if ( cy > 0 ) {
-                --cy;
-                int screen_cursor = cy - top_line_num;
-                if ( screen_cursor < 5 ) {
-                    --top_line_num;
-                    if ( top_line_num < 0 )
-                        top_line_num = 0;
-                }
-            }
-            break;
-        case DOWN:
-            if ( current->next == NULL ) {
-                cx = current->len;
-            } else {
-                ++cy;
-                int rows = WindowHeight() / _char_h;
-                if ( cy - top_line_num > rows - 5 ) {
-                    ++top_line_num;
-                }
-            }
-            break;
-        case LEFT:
-            --cx;
-            if ( cx < 0 ) {
-                if ( cy > 0 ) { // go to end of prev line
-                    --cy;
-                    cx = current->prev->len;
-                } else {
-                    cx = 0; // top of document
-                }
-            }
-            break;
-        case RIGHT:
-            if ( cx < current->len ) {
-                ++cx;
-            } else if ( current->next ) {
-                // passed EOL, move down if not bottom
-                ++cy;
-                cx = 0;
-            }
-            break;
-        default:
-            return;
-    }
-
-    Line * line = GetLine(&buffer, cy);
-
-    if ( cx > line->len ) {
-        cx = line->len; // snap to end of line
-    }
-
-    RestartCursor();
-}
-
-static void InsertNewLine(void)
-{
-    Line * current = GetLine(&buffer, cy);
-    Line * newline = NewLine();
-
-    if ( cy == 0 && cx == 0 ) {
-        InsertLineBefore(&buffer, newline, current);
-    } else if ( cx == 0 ) {
-        InsertLineAfter(&buffer, newline, current->prev);
-    } else if ( cx == current->len ) {
-        InsertLineAfter(&buffer, newline, current);
-    } else { // We are mid-line.
-        InsertLineAfter(&buffer, newline, current);
-        char * cursor_string = current->chars + cx;
-        InsertChars(newline, cursor_string, (int)strlen(cursor_string), 0);
-        RemoveChars(current, current->len - cx, cx);
-    }
-
-    cx = 0;
-    cy++;
-}
-
-static void Backspace(void)
-{
-    if ( cx == 0 && cy == 0 ) {
+    if ( view->cx == 0 && view->cy == 0 ) {
         return;
     }
 
-    Line * current = GetLine(&buffer, cy);
+    Line * current = GetLine(&view->buffer, view->cy);
 
-    if ( cx == 0 ) { // Append current line onto end of previous line.
-        --cy;
-        cx = current->prev->len;
-        InsertChars(current->prev, current->chars, (int)strlen(current->chars), cx);
-        RemoveLine(&buffer, current);
+    if ( view->cx == 0 ) { // Append current line onto end of previous line.
+        --view->cy;
+        view->cx = current->prev->len;
+        InsertChars(current->prev, current->chars, (int)strlen(current->chars), view->cx);
+        RemoveLine(&view->buffer, current);
     } else { // We are mid-line.
-        RemoveChars(current, 1, cx - 1);
-        cx--;
+        RemoveChars(current, 1, view->cx - 1);
+        view->cx--;
     }
 }
 
-static void PasteFromClipboard(void)
+// TODO: move to textview.c
+void JumpToBeginningOfLine(TextView * view)
 {
-    if ( !SDL_HasClipboardText() ) {
-        return;
-    }
-
-    char * clipboard_text = SDL_GetClipboardText();
-    char * this = clipboard_text;
-
-    // Handle new line characters that may be present in the pasted text.
-    do {
-        Line * line = GetLine(&buffer, cy);
-        char * next = strchr(this, '\n');
-
-        // Calculate the length of 'this':
-        int this_len;
-        if ( next ) {
-            this_len = (int)(next - this);
-            next++; // Advance past the new line.
-        } else {
-            this_len = (int)strlen(this);
-        }
-
-        InsertChars(line, this, this_len, cx);
-        cx += this_len;
-
-        if ( next ) {
-            InsertNewLine();
-        }
-
-        this = next;
-    } while ( this != NULL );
-
-    SDL_free(clipboard_text);
-}
-
-void JumpToBeginningOfLine(void)
-{
-    Line * line = GetLine(&buffer, cy);
+    Line * line = GetLine(&view->buffer, view->cy);
     if ( line->len == 0 ) {
         return;
     }
@@ -419,38 +309,43 @@ void JumpToBeginningOfLine(void)
         }
     }
 
-    if ( cx > x ) {
-        cx = x;
+    if ( view->cx > x ) {
+        view->cx = x;
     } else {
-        cx = 0;
+        view->cx = 0;
     }
 }
 
 static void DoEditorKey(SDL_Keycode key)
 {
+    if ( BufferRespond(&document_view, key, mods) ) {
+        return;
+    }
+
     switch ( key ) {
+#if 0
         case SDLK_UP:
             if ( mods & CMD_KEY ) {
                 Scroll(0);
             } else {
-                MoveCursor(UP);
+                MoveCursor(&document_buffer, UP);
             }
             break;
         case SDLK_DOWN:
             if ( mods & CMD_KEY ) {
-                Scroll(buffer.num_lines - 1);
+                Scroll(document_buffer.num_lines - 1);
             } else {
-                MoveCursor(DOWN);
+                MoveCursor(&document_buffer, DOWN);
             }
             break;
         case SDLK_RIGHT: {
-            Line * line = GetLine(&buffer, cy);
+            Line * line = GetLine(&document_buffer, cy);
             if ( mods & CMD_KEY ) {
                 cx = line->len;
             } else if ( mods & KMOD_ALT ) {
                 JumpToEndOfWord(line, &cx);
             } else {
-                MoveCursor(RIGHT);
+                MoveCursor(&document_buffer, RIGHT);
             }
             break;
         }
@@ -458,9 +353,9 @@ static void DoEditorKey(SDL_Keycode key)
             if ( mods & CMD_KEY ) {
                 JumpToBeginningOfLine();
             } else if ( mods & KMOD_ALT ) {
-                JumpToBeginningOfWord(GetLine(&buffer, cy), &cx);
+                JumpToBeginningOfWord(GetLine(&document_buffer, cy), &cx);
             } else {
-                MoveCursor(LEFT);
+                MoveCursor(&document_buffer, LEFT);
             }
             break;
         case SDLK_PAGEUP: {
@@ -473,6 +368,7 @@ static void DoEditorKey(SDL_Keycode key)
             Scroll(cy + visible_rows / 2);
             break;
         }
+
         case SDLK_RETURN:
             InsertNewLine();
             break;
@@ -481,34 +377,30 @@ static void DoEditorKey(SDL_Keycode key)
             break;
         case SDLK_i:
             if ( keys[SDL_SCANCODE_CAPSLOCK] ) {
-                MoveCursor(UP);
+                MoveCursor(&document_buffer, UP);
             }
             break;
         case SDLK_j:
             if ( keys[SDL_SCANCODE_CAPSLOCK] ) {
-                MoveCursor(LEFT);
+                MoveCursor(&document_buffer, LEFT);
             }
             break;
         case SDLK_k:
             if ( keys[SDL_SCANCODE_CAPSLOCK] ) {
-                MoveCursor(DOWN);
+                MoveCursor(&document_buffer, DOWN);
             }
             break;
         case SDLK_l:
             if ( keys[SDL_SCANCODE_CAPSLOCK] ) {
-                MoveCursor(RIGHT);
+                MoveCursor(&document_buffer, RIGHT);
             } else if ( mods & CMD_KEY ) {
                 OpenTray(TRAY_LINE_NUM);
             }
             break;
+#endif
         case SDLK_s:
             if ( mods & CMD_KEY ) {
-                WriteBuffer(&buffer, document_path);
-            }
-            break;
-        case SDLK_v:
-            if ( mods & CMD_KEY ) {
-                PasteFromClipboard();
+                WriteBuffer(&document_view.buffer, document_path);
             }
             break;
         case SDLK_ESCAPE:
@@ -528,6 +420,10 @@ int ProgramLoop(void)
     bool quit_requested = false;
     RestartCursor();
 
+    FillRect((SDL_Rect){0, 0, WindowWidth(), WindowHeight()}, ColorToSDL(_bg_color));
+    doc_buf_rect = DocumentBufferRect();
+    DrawTextView(&document_view, doc_buf_rect, false);
+
     while ( !quit_requested ) {
         mods = SDL_GetModState();
         needs_refresh = false;
@@ -544,7 +440,7 @@ int ProgramLoop(void)
             switch ( event.type ) {
                 case SDL_QUIT:
                     if ( !(mods & KMOD_SHIFT) ) {
-                        WriteBuffer(&buffer, document_path);
+                        WriteBuffer(&document_view.buffer, document_path);
                     }
                     quit_requested = true;
                     break;
@@ -579,8 +475,9 @@ int ProgramLoop(void)
                         if ( TrayIsOpen() ) {
                             DoTrayTextInput(event.text.text[0]);
                         } else {
-                            InsertChars(GetLine(&buffer, cy), &event.text.text[0], 1, cx);
-                            cx++;
+                            Line * line = GetLine(&document_view.buffer, document_view.cy);
+                            InsertChars(line, &event.text.text[0], 1, document_view.cx);
+                            document_view.cx++;
                         }
                         needs_refresh = true;
                         RestartCursor();
@@ -593,6 +490,7 @@ int ProgramLoop(void)
         }
 
         // Smooth scrolling!
+#if 0
         float dy = top_line_num_f - (float)top_line_num;
         if ( fabsf(dy) > 0.1f ) {
             top_line_num_f -= dy * 0.4f;
@@ -600,16 +498,21 @@ int ProgramLoop(void)
         } else {
             top_line_num_f = top_line_num;
         }
+#endif
+        if ( UpdateBufferOffsets(&document_view, doc_buf_rect.h) ) {
+            needs_refresh = true;
+        }
 
         if ( UpdateTray() ) {
             needs_refresh = true;
         }
 
         if ( needs_refresh ) {
-            Redraw();
+            FillRect((SDL_Rect){0, 0, WindowWidth(), WindowHeight()}, ColorToSDL(_bg_color));
+            DrawTextView(&document_view, doc_buf_rect, cursor_blink);
+        } else {
+            SDL_Delay(20);
         }
-
-        SDL_Delay(20);
     }
 
     return EXIT_SUCCESS;

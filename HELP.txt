@@ -128,26 +128,23 @@ C-UP            Move Cursor to Start of Document
 C-DOWN          Move Cursor to End of Document
 C-LEFT          Move Cursor to Start of Line
 C-RIGHT         Move Cursor to End of Line
+                Center Cursor in Window
 
 SCRIPT EXECUTION, ETC.
 Run scripts or batch files in the current working directory, if present.
-C-R*            execute run.sh (MacOS/Linux) or run.bat (Windows)
-C-B*            execute build.sh (MacOS/Linux) or build.bat (Windows)
-C-M*            execute make (MacOS/Linux only, probably)
+C-R*            Execute run.sh (MacOS/Linux) or run.bat (Windows)
+C-B*            Execute build.sh (MacOS/Linux) or build.bat (Windows)
+C-M*            Execute make (MacOS/Linux only, probably)
 
-TEXT SELECTION
-CAPS-R*         select row (line)
-CAPS-W*         select word
-CAPS-S*         select to start of line
-CAPS-E*         select to end of line
-CAPS-C*         select character (equivalent to DEL)
-CAPS-D*         select character before cursor (equivalent to BACKSPACE)
-CAPS-A*         select character after cursor
-
-DELETION
-S-CAPS-R*       delete row (line)
-S-CAPS-W*       delete word
-...
+TEXT DELETION / SELECTION
+- If SHIFT is held, select text instead of delete
+CAPS-R*         current row (line)
+CAPS-W*         word under cursor
+CAPS-S*         from one before cursor to start of line
+CAPS-E*         from the cursor to end of line
+CAPS-C*         character at cursor
+CAPS-D*         character before cursor
+CAPS-A*         character after cursor
 
 MULTILINE CURSOR
 C-A-UP*         extend multiline cursor up

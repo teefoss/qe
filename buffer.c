@@ -2,14 +2,10 @@
 //  buffer.c
 //  qe
 //
-//  Created by Thomas Foster on 5/14/24.
+//  Created by Thomas Foster on 7/28/24.
 //
 
 #include "buffer.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
 void FreeBuffer(Buffer * buffer)
 {
@@ -43,7 +39,7 @@ void InsertLineBefore(Buffer * buffer, Line * line, Line * next)
     buffer->num_lines++;
 }
 
-/** 
+/**
  *  Insert `line` into `buffer` after `prev`.
  */
 void InsertLineAfter(Buffer * buffer, Line * line, Line * prev)

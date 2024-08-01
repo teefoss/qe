@@ -8,6 +8,7 @@
 #include "config.h"
 #include "color.h"
 #include "plat.h"
+#include "misc.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -291,6 +292,7 @@ FILE * OpenConfig(const char * file_name, Access access)
 {
     char * path = ConfigFilePath(file_name);
 
+    // TODO: OpenRead, OpenWrite, and FileExists functions -> misc.c
     FILE * file = fopen(path, access == ACCESS_READ ? "r" : "w" );
     if ( file == NULL && access == ACCESS_WRITE ) {
         DieGracefully("Could not create %s: %s", path, strerror(errno));

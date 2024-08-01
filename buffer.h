@@ -2,7 +2,7 @@
 //  buffer.h
 //  qe
 //
-//  Created by Thomas Foster on 7/2/24.
+//  Created by Thomas Foster on 7/28/24.
 //
 
 #ifndef buffer_h
@@ -12,8 +12,8 @@
 
 typedef struct {
     Line * head;
-    Line * tail;  // TODO: this may not be needed
-    size_t num_lines;
+    Line * tail; // TODO: this may not be needed
+    int num_lines;
 } Buffer;
 
 void    LoadBuffer(Buffer *, FILE * file);

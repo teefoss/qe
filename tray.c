@@ -7,12 +7,12 @@
 
 #include "tray.h"
 
-#include "buffer.h"
 #include "color.h"
 #include "config.h"
 #include "font.h"
 #include "line.h"
 #include "qe.h"
+#include "textview.h"
 #include "window.h"
 
 #include <errno.h>
@@ -32,7 +32,7 @@ static TrayType type;
 static float bottom;
 Line buffer;
 static int cx;
-static Buffer buf;
+static TextView view;
 
 float TrayBottom(void)
 {
@@ -82,8 +82,8 @@ void DoTrayKey(SDL_Keycode key)
                     break;
                 }
 
-                if ( line_num > 0 && line_num <= buf.num_lines ) {
-                    Scroll(line_num - 1);
+                if ( line_num > 0 && line_num <= view.buffer.num_lines ) {
+//                    Scroll(line_num - 1);
                     CloseTray();
                 }
             }

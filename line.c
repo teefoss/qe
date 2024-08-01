@@ -9,6 +9,7 @@
 
 #include "buffer.h"
 #include "config.h"
+#include "misc.h"
 
 Line * NewLine(void)
 {
@@ -94,7 +95,7 @@ void JumpToBeginningOfWord(Line * line, int * cx)
     };
 }
 
-static void AddToken(Line * line, size_t start, size_t len, Color color)
+static void AddToken(Line * line, char * start, size_t len, bool is_keyword)
 {
     line->num_tokens++;
     if ( line->num_tokens > line->allocated_tokens ) {
@@ -103,10 +104,10 @@ static void AddToken(Line * line, size_t start, size_t len, Color color)
         line->allocated_tokens++;
     }
 
-    line->tokens[line->num_tokens - 1] = (Token){ start, len, color };
+    line->tokens[line->num_tokens - 1] = (Token){ start, len, is_keyword };
 }
 
-void UpdateLineColor(Line * line)
+void UpdateTokens(Line * line)
 {
     line->num_tokens = 0;
     char * str = line->chars;
@@ -115,54 +116,37 @@ void UpdateLineColor(Line * line)
     // TODO: comments
 
     while ( *str != '\0' ) {
-        if ( *str == '"' ) { // TODO: _highlight_strings
-            end = str + 1;
-            while ( *end != '\0' && *end != '"') {
-                if ( *end == '\\' && *(end + 1) == '"' ) {
-                    end += 2;
-                }
-                end++;
-            }
-
-            AddToken(line, str - line->chars, end - str, _secondary_color);
-            str = end;
-        } else if ( isdigit(*str) ) { // TODO: _highlight_numbers
-            char * end;
-            SDL_strtol(str, &end, 0);
-            AddToken(line, str - line->chars, end - str, _secondary_color);
-            str = end;
-        } else if ( SDL_isalpha(*str) ) { // start of keyword or ident.
+        if ( SDL_isalpha(*str) || *str == '_' ) { // Start of keyword or identifier.
             end = str;
-            while ( SDL_isalnum(*end) ) {
+            while ( *end && (SDL_isalnum(*end) || *end == '_') ) {
                 end++;
             }
 
             size_t len = end - str;
             char * word = calloc(len + 1, sizeof(char));
             strncpy(word, str, len);
-            if ( IsKeyword(word) ) {
-                AddToken(line, str - line->chars, len, _secondary_color);
-            } else {
-                AddToken(line, str - line->chars, len, _primary_color);
-            }
+            AddToken(line, str, len, IsKeyword(word));
+            free(word);
             str = end;
         } else {
             end = str;
-            while ( *end != '\0' && !SDL_isalnum(*end) ) {
+            while ( *end && (!SDL_isalpha(*end) && *end != '_') ) {
                 end++;
             }
 
-            AddToken(line, str - line->chars, end - str, _primary_color);
+            AddToken(line, str, end - str, _primary_color);
             str = end;
         }
     }
 
-//    printf("line tokens:\n");
-//    for ( int i = 0; i < line->num_tokens; i++ ) {
-//        Token t = line->tokens[i];
-//        char * buf = calloc(t.len + 1, 1);
-//        strncpy(buf, &line->chars[t.start], t.len);
-//        printf("%s\n", buf);
-//        free(buf);
-//    }
+#if 0
+    printf("line tokens:\n");
+    for ( int i = 0; i < line->num_tokens; i++ ) {
+        Token t = line->tokens[i];
+        char * buf = calloc(t.len + 1, 1);
+        strncpy(buf, &line->chars[t.start], t.len);
+        printf("%s\n", buf);
+        free(buf);
+    }
+#endif
 }

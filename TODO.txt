@@ -6,6 +6,7 @@ Undo/redo
 config: font antialiasing boolean
 config: --no-detach
 Do smooth scrolling the Right way
+multi-line cursor
 
 BUGS:
 Cursor disappears at end of doc
@@ -20,4 +21,4 @@ For MacOS testing:
 /Users/tomf/Library/Fonts/Iosevka-Regular.ttc
 
 Blended is much slower than Shaded: use shaded, since the background box is fine
-Better: use LCD (subpixel)
+Better: use LCD? (subpixel)

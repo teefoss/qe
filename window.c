@@ -10,6 +10,7 @@
 #include "buffer.h"
 #include "config.h"
 #include "font.h"
+#include "misc.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -72,7 +73,7 @@ void InitWindow(void)
 
     _draw_scale = window_surface->h / h;
     printf("render scale: %d\n", _draw_scale);
-    _margin = 8 * _draw_scale;
+    _margin = 2 * _draw_scale;
 }
 
 void FillRect(SDL_Rect rect, SDL_Color color)
@@ -111,11 +112,7 @@ int DrawFormat(int x, int y, SDL_Color fg, SDL_Color bg, const char * format, ..
 
     size_t size_needed = len + 1;
     if ( allocated < size_needed ) {
-        char * temp = realloc(buffer, size_needed);
-        if ( temp == NULL ) {
-            DieGracefully("Error: out of memory");
-        }
-        buffer = temp;
+        buffer = Reallocate(buffer, size_needed);
         allocated = size_needed;
     }
 

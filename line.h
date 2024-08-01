@@ -12,17 +12,19 @@
 #include "color.h"
 
 typedef struct {
-    size_t start;
+    char * start;
     size_t len;
-    Color color;
+    bool is_keyword;
 } Token;
 
 typedef struct line {
     char * chars; // allocated size is always length + 1
+    int len;
+
     Token * tokens;
     int num_tokens;
     int allocated_tokens;
-    int len;
+
     struct line * prev;
     struct line * next;
 } Line;
@@ -32,7 +34,7 @@ void InsertChars(Line * line, char * string, int len, int x);
 void RemoveChars(Line * line, int count, int x);
 void JumpToEndOfWord(Line * line, int * cx);
 void JumpToBeginningOfWord(Line * line, int * cx);
-void UpdateLineColor(Line * line);
+void UpdateTokens(Line * line);
 
 // TODO: DrawLine(const Line * line, int line_num, bool highlighted)
 

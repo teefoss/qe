@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "window.h"
+#include "misc.h"
 #include <SDL_ttf.h>
 
 float _char_w;
@@ -77,6 +78,7 @@ void ChangeFontSize(int incrememnt)
     SDL_Surface * surface = CreateTextSurface(buf, (SDL_Color){0}, (SDL_Color){0});
     _char_w = (float)surface->w / TEST_BUF_SIZE;
     printf("char w: %f\n", _char_w);
+    SDL_FreeSurface(surface);
     #undef TEST_BUF_SIZE
 }
 
@@ -96,10 +98,6 @@ void LoadFont(void)
         fprintf(stderr, "Could not load font: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
-
-    TTF_SetFontHinting(font, TTF_HINTING_MONO);
-    TTF_SetFontHinting(font, TTF_HINTING_NORMAL);
-    TTF_SetFontHinting(font, TTF_HINTING_LIGHT_SUBPIXEL);
 
     ChangeFontSize(0);
 }

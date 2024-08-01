@@ -1,4 +1,3 @@
- "Hello there"
 #include <stdio.h>
 
 if ( variable == 5 && other_var != 34 ) {
@@ -145,4 +144,3 @@ static void Redraw(void)
 
     UpdateWindow();
 }
-
