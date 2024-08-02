@@ -391,14 +391,12 @@ void DrawTextView(TextView * view, SDL_Rect rect, bool show_cursor)
         }
 
         if ( view->cy == line_num && show_cursor ) {
-            SDL_Rect r = {
-                .x = x + ROUND(_char_w * view->cx),
-                .y = y,
-                .w = ROUND(_char_w),
-                .h = _char_h,
-            };
-//            FillRect(r, ColorToSDL(_primary_color));
-            
+            char cursor_char[2] = { line->chars[view->cx], '\0' };
+            DrawString(x + ROUND(_char_w * view->cx),
+                       y,
+                       _bg_color,
+                       _secondary_color,
+                       cursor_char);
         }
     }
 

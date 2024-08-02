@@ -172,6 +172,7 @@ bool IsKeyword(const char * word)
     return false;
 }
 
+#if 0
 static char * GetOrCreateApplicationDirectory(void)
 {
     if ( !ApplicationDirectoryExists() ) {
@@ -180,6 +181,7 @@ static char * GetOrCreateApplicationDirectory(void)
 
     return ApplicationDirectory();
 }
+#endif
 
 static char * ConfigFilePath(const char * file_name)
 {

@@ -73,7 +73,7 @@ void InitWindow(void)
 
     _draw_scale = window_surface->h / h;
     printf("render scale: %d\n", _draw_scale);
-    _margin = 2 * _draw_scale;
+    _margin = 4 * _draw_scale;
 }
 
 void FillRect(SDL_Rect rect, SDL_Color color)
